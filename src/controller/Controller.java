@@ -2,8 +2,9 @@ package controller;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
+import model.ServerListener;
+import model.Validator;
 
 import javax.swing.*;
 import java.io.File;
@@ -14,16 +15,19 @@ public class Controller {
     private TextField ServerHostField;
     @FXML
     private TextField ServerPortField;
-    @FXML
-    private CheckBox ServerChecksumBox;
-
 
 
     @FXML
     public void handleServerListenButton(ActionEvent event) {
-        System.out.println(ServerHostField.getText());
-        System.out.println(ServerPortField.getText());
-        System.out.println(ServerChecksumBox.isSelected());
+        if (Validator.isValidHost(ServerHostField.getText(), ServerPortField.getText())) {
+            ServerListener server = new ServerListener(ServerHostField.getText(), ServerPortField.getText());
+            System.out.println(server.getAddress().toString());
+            System.out.println(server.getPort());
+        }
+        else {
+            System.out.println("Wrong input format");
+            //TODO add some kind of warning message, what causing problem
+        }
     }
 
 
