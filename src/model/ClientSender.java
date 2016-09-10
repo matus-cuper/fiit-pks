@@ -1,24 +1,24 @@
 package model;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.io.IOException;
+import java.net.*;
 
 /**
  * Created by Matus Cuper on 10.9.2016.
  *
- * ServerListener open UDP socket for listening on specific address (localhost) and port
+ * ServerReceiver open UDP socket for sending packets to specific address and port
  */
-public class ServerListener {
+public class ClientSender {
 
     private InetAddress address;
     private int port;
 
-    public ServerListener(InetAddress address, int port) {
+    public ClientSender(InetAddress address, int port) {
         this.address = address;
         this.port = port;
     }
 
-    public ServerListener(String address, String port) {
+    public ClientSender(String address, String port) {
         try {
             System.out.println(address);
             this.address = InetAddress.getByName(address);
@@ -30,6 +30,20 @@ public class ServerListener {
         }
     }
 
+    public void start() {
+        try {
+            DatagramSocket socket = new DatagramSocket();
+            byte[] data = "Hello hovno".getBytes();
+            DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
+            socket.send(packet);
+        } catch (SocketException e) {
+            //TODO addlogging
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+            //TODO addlogging
+        }
+    }
 
     public InetAddress getAddress() {
         return address;
