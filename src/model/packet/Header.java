@@ -14,23 +14,20 @@ public class Header {
     private byte[] type;
     private byte[] header;
 
-    public Header(byte[] nextSize, byte[] nextCount, byte[] type) {
-        this.nextSize = nextSize;
-        this.nextCount = nextCount;
-        this.type = type;
-    }
-
     public Header(int size, int count, int type) {
         this.nextSize = Utils.intTo2ByteArray(size);
         this.nextCount = Utils.intTo2ByteArray(count);
         this.type = new byte[] {(byte)type};
+        this.header = null;
     }
 
-    public byte[] getHeader() {
-        header = new byte[this.nextSize.length + this.nextCount.length + this.type.length];
-        System.arraycopy(this.nextSize, 0, this.header, 0, this.nextSize.length);
-        System.arraycopy(this.nextCount, 0, this.header, this.nextSize.length, this.nextCount.length);
-        System.arraycopy(this.type, 0, this.header, this.nextSize.length + this.nextCount.length, this.type.length);
+    byte[] getHeader() {
+        if (this.header == null) {
+            this.header = new byte[this.nextSize.length + this.nextCount.length + this.type.length];
+            System.arraycopy(this.nextSize, 0, this.header, 0, this.nextSize.length);
+            System.arraycopy(this.nextCount, 0, this.header, this.nextSize.length, this.nextCount.length);
+            System.arraycopy(this.type, 0, this.header, this.nextSize.length + this.nextCount.length, this.type.length);
+        }
         return header;
     }
 

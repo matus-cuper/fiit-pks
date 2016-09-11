@@ -1,6 +1,8 @@
 package model;
 
+import model.packet.Checksum;
 import model.packet.Header;
+import model.packet.Packet;
 
 import java.io.IOException;
 import java.net.*;
@@ -37,7 +39,8 @@ public class ClientSender {
             DatagramSocket socket = new DatagramSocket();
             //byte[] data = "Hello hovno".getBytes();
             int size = Integer.parseInt(text);
-            byte[] data = new Header(size, 2222, 10).getHeader();
+            Packet p = new Packet(new Header(size, 2222, 10), new Checksum("ahoj"), "kolace");
+            byte[] data = p.getBytes();
             DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
             socket.send(packet);
         } catch (SocketException e) {
