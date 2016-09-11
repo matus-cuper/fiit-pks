@@ -32,11 +32,12 @@ public class ClientSender {
         }
     }
 
-    public void start() {
+    public void start(String text) {
         try {
             DatagramSocket socket = new DatagramSocket();
             //byte[] data = "Hello hovno".getBytes();
-            byte[] data = new Header(1111, 2222, 10).getHeader();
+            int size = Integer.parseInt(text);
+            byte[] data = new Header(size, 2222, 10).getHeader();
             DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
             socket.send(packet);
         } catch (SocketException e) {

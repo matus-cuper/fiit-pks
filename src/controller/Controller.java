@@ -37,6 +37,8 @@ public class Controller {
     private TextField ClientHostField;
     @FXML
     private TextField ClientPortField;
+    @FXML
+    private TextField ClientSizeField;
 
     @FXML
     private Button ClientSendButton;
@@ -45,9 +47,9 @@ public class Controller {
 
     @FXML
     public void handleClientSendButton(ActionEvent event) {
-        if (Validator.isValidHost(ClientHostField.getText(), ClientPortField.getText())) {
+        if (Validator.isValidHost(ClientHostField.getText(), ClientPortField.getText()) && Validator.isValidSize(ClientSizeField.getText())) {
             ClientSender client = new ClientSender(ClientHostField.getText(), ClientPortField.getText());
-            client.start();
+            client.start(ClientSizeField.getText());
         }
         else {
             System.out.println("Wrong input format");

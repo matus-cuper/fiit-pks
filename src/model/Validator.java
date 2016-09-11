@@ -37,13 +37,13 @@ public class Validator {
             return false;
         }
     }
-
+    // TODO make only one method for valid integer
     private static boolean isValidPort(String port) {
         try {
             int p = Integer.parseInt(port);
             return (p >= 1024) && (p <= 65535);
         } catch (Exception e) {
-            //TODO add logging
+            // TODO add logging
             return false;
         }
     }
@@ -53,4 +53,14 @@ public class Validator {
         return (o >= 0) && (o <= 255);
     }
 
+    public static boolean isValidSize(String size) {
+        try {
+            int s = Integer.parseInt(size);
+            // ODO add configuration file
+            return (s >= 8) && (s <= 65527);
+        } catch (Exception e) {
+            // TODO add logging
+            return false;
+        }
+    }
 }
