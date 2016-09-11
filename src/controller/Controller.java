@@ -75,6 +75,7 @@ public class Controller {
     @FXML
     public void handleClientDisconnectButton() {
         client.stop();
+        System.out.println("Connection ended");
     }
 
     @FXML

@@ -9,6 +9,8 @@ import model.Utils;
  */
 public class Header {
 
+    private static final int HEADER_SIZE = 7;
+
     private byte[] nextSize;
     private byte[] nextCount;
     private byte[] type;
