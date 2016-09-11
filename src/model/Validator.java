@@ -3,7 +3,7 @@ package model;
 /**
  * Created by Matus Cuper on 10.9.2016.
  *
- * Validator class provide static methods which validate InetAddress and port number of host.
+ * Validator class provide static methods, which validate InetAddress and port number of host.
  * Parameters are checked, before creation of object.
  */
 public class Validator {

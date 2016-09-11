@@ -1,5 +1,7 @@
 package model;
 
+import model.packet.Header;
+
 import java.io.IOException;
 import java.net.*;
 
@@ -33,7 +35,8 @@ public class ClientSender {
     public void start() {
         try {
             DatagramSocket socket = new DatagramSocket();
-            byte[] data = "Hello hovno".getBytes();
+            //byte[] data = "Hello hovno".getBytes();
+            byte[] data = new Header(1111, 2222, 10).getHeader();
             DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
             socket.send(packet);
         } catch (SocketException e) {
