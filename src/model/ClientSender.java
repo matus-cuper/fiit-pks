@@ -16,6 +16,7 @@ public class ClientSender {
 
     private InetAddress address;
     private int port;
+    private DatagramSocket socket;
 
     public ClientSender(InetAddress address, int port) {
         this.address = address;
@@ -23,32 +24,40 @@ public class ClientSender {
     }
 
     public ClientSender(String address, String port) {
+        this.socket = null;
+        this.port = Integer.parseInt(port);
         try {
-            System.out.println(address);
             this.address = InetAddress.getByName(address);
-            System.out.println(this.address.toString());
-            this.port = Integer.parseInt(port);
         } catch (UnknownHostException e) {
             //TODO add logging
             e.printStackTrace();
         }
     }
 
-    public void start(String text) {
+    public void start() {
         try {
-            DatagramSocket socket = new DatagramSocket();
-            //byte[] data = "Hello hovno".getBytes();
-            int size = Integer.parseInt(text);
-            Packet p = new Packet(new Header(size, 2222, 10), new Checksum("ahoj"), "kolace");
-            byte[] data = p.getBytes();
-            DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
-            socket.send(packet);
+            this.socket = new DatagramSocket();
         } catch (SocketException e) {
             //TODO addlogging
             e.printStackTrace();
+        }
+    }
+
+    public void send(String message, String size) {
+        // TODO change message length into size
+        Packet packet = new Packet(new Header(message.length(), 2222, 10), new Checksum(""), message);
+        DatagramPacket datagramPacket = new DatagramPacket(packet.getBytes(), packet.getBytes().length, this.address, this.port);
+        try {
+            this.socket.send(datagramPacket);
         } catch (IOException e) {
             e.printStackTrace();
-            //TODO addlogging
+        }
+    }
+
+    public void stop() {
+        if (this.socket != null) {
+            this.socket.close();
+            this.socket = null;
         }
     }
 

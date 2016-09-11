@@ -95,12 +95,12 @@
                                   <Font size="16.0" />
                               </font>
                           </Button>
-                        <Button fx:id="ClientConnectButton" layoutX="109.0" layoutY="135.0" mnemonicParsing="false" text="Connect">
+                        <Button fx:id="ClientConnectButton" layoutX="109.0" layoutY="135.0" mnemonicParsing="false" onAction="#handleClientConnectButton" text="Connect">
                            <font>
                               <Font size="16.0" />
                            </font>
                         </Button>
-                        <Button fx:id="ClientDisconnectButton" layoutX="207.0" layoutY="135.0" mnemonicParsing="false" text="Disconnect">
+                        <Button fx:id="ClientDisconnectButton" layoutX="207.0" layoutY="135.0" mnemonicParsing="false" onAction="#handleClientDisconnectButton" text="Disconnect">
                            <font>
                               <Font size="16.0" />
                            </font>
