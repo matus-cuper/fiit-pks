@@ -7,6 +7,15 @@ package model.packet;
  */
 public class Packet {
 
+    public static final byte DATA_FIRST = 0;
+    public static final byte DATA_SENT = 1;
+    public static final byte DATA_LAST = 2;
+    public static final byte START_CONNECTION = 3;
+    public static final byte HOLD_CONNECTION = 4;
+    public static final byte STOP_CONNECTION = 5;
+    public static final byte DATA_OK = 6;
+    public static final byte DATA_RESENT = 7;
+
     private Header header;
     private Checksum checksum;
     private byte[] data;
