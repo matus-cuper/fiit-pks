@@ -1,11 +1,9 @@
 package model;
 
-import com.sun.xml.internal.bind.v2.runtime.reflect.Lister;
 import model.packet.Checksum;
 import model.packet.Header;
 import model.packet.Packet;
 
-import javax.xml.crypto.Data;
 import java.io.IOException;
 import java.net.*;
 import java.util.ArrayList;
@@ -48,12 +46,20 @@ public class ClientSender {
     }
 
     public void send(String data, String size) {
-        // TODO change message length into size
-        this.sendFirstPacket(data.length(), Integer.parseInt(size));
-        this.sendData(data, Integer.parseInt(size));
+        int dataAndHeadSize = data.length() + Header.HEADER_SIZE;
+        // TODO change message length into size - utility verifier
+        int frameSize = Integer.parseInt(size);
+        if (dataAndHeadSize > frameSize) {
+            this.sendFirstPacket(frameSize);
+            this.sendData(data, frameSize);
+        }
+        else {
+            this.sendFirstPacket(dataAndHeadSize);
+            this.sendOnePacket(dataAndHeadSize, 0, 0, Packet.DATA_LAST, data);
+        }
     }
 
-    public void sendData(String data, int size) {
+    private void sendData(String data, int size) {
         int packetDataSize = size - Header.HEADER_SIZE;
         int frameSizedPackets = (data.length() / packetDataSize);
         int lastPacketSize = (data.length() % packetDataSize);
@@ -66,45 +72,24 @@ public class ClientSender {
         }
 
         for (int i = 1; i < frameSizedPackets; i++) {
-            Header commonHeader = new Header(size, i + 1, Packet.DATA_SENT);
-            Packet commonPacket = new Packet(commonHeader, new Checksum(commonHeader.toString() + packetsData.get(i - 1)), packetsData.get(i - 1));
-            DatagramPacket commonDatagramPacket = new DatagramPacket(commonPacket.getBytes(), size, this.address, this.port);
-            this.sendDatagramPacket(commonDatagramPacket);
+            this.sendOnePacket(size, size, i + 1, Packet.DATA_SENT, packetsData.get(i - 1));
         }
 
-        Header lastButOneHeader = new Header(lastPacketSize + Header.HEADER_SIZE, frameSizedPackets + 1, Packet.DATA_SENT);
-        Packet lastButOnePacket = new Packet(lastButOneHeader, new Checksum(lastButOneHeader.toString() + packetsData.get(frameSizedPackets - 1)), packetsData.get(frameSizedPackets - 1));
-        DatagramPacket lastButOneDatagramPacket = new DatagramPacket(lastButOnePacket.getBytes(), size, this.address, this.port);
-        this.sendDatagramPacket(lastButOneDatagramPacket);
-
-        Header lastHeader = new Header(0, 0, Packet.DATA_LAST);
-        Packet lastPacket = new Packet(lastHeader, new Checksum(lastHeader.toString() + packetsData.get(frameSizedPackets)), packetsData.get(frameSizedPackets));
-        // TODO fix data and size
-        DatagramPacket lastDatagramPacket = new DatagramPacket(lastPacket.getBytes(), lastPacketSize + Header.HEADER_SIZE, this.address, this.port);
-        this.sendDatagramPacket(lastDatagramPacket);
-/*
-        Packet packet = new Packet(new Header(message.length(), 2222, 10), new Checksum(""), message);
-        DatagramPacket datagramPacket = new DatagramPacket(packet.getBytes(), packet.getBytes().length, this.address, this.port);
-        try {
-            this.socket.send(datagramPacket);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
+        // Send one but last packet
+        this.sendOnePacket(size, lastPacketSize + Header.HEADER_SIZE, frameSizedPackets + 1, Packet.DATA_SENT, packetsData.get(frameSizedPackets - 1));
+        // Send last packet
+        this.sendOnePacket(lastPacketSize + Header.HEADER_SIZE, 0, 0, Packet.DATA_LAST, packetsData.get(frameSizedPackets));
     }
 
-    private void sendFirstPacket(int dataSize, int frameSize) {
-        int packetSize = (dataSize + Header.HEADER_SIZE) > frameSize ? frameSize : (dataSize + Header.HEADER_SIZE);
-        Header header = new Header(packetSize, 1, Packet.DATA_FIRST);
-        Packet packet = new Packet(header, new Checksum(header.toString()), "");
-        DatagramPacket datagramPacket = new DatagramPacket(packet.getBytes(), Header.HEADER_SIZE, this.address, this.port);
+    private void sendOnePacket(int currentPacketSize, int nextPacketSize, int nextPacketSerialNumber, int packetType, String packetData) {
+        Header header = new Header(nextPacketSize, nextPacketSerialNumber, packetType);
+        Packet packet = new Packet(header, new Checksum(header.toString()), packetData);
+        DatagramPacket datagramPacket = new DatagramPacket(packet.getBytes(), currentPacketSize, this.address, this.port);
         this.sendDatagramPacket(datagramPacket);
     }
 
-    private void sendLastPacket() {
-        Header header = new Header(0, 0, Packet.DATA_LAST);
-        Packet packet = new Packet(header, new Checksum(header.toString()), "");
-        DatagramPacket datagramPacket = new DatagramPacket(packet.getBytes(), Header.HEADER_SIZE, this.address, this.port);
-        this.sendDatagramPacket(datagramPacket);
+    private void sendFirstPacket(int packetSize) {
+        this.sendOnePacket(Header.HEADER_SIZE, packetSize, 1, Packet.DATA_FIRST, "");
     }
 
     private void sendDatagramPacket(DatagramPacket datagramPacket) {

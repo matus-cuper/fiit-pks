@@ -26,8 +26,7 @@ public class Controller {
         if (Validator.isValidHost(ServerHostField.getText(), ServerPortField.getText())) {
             ServerReceiver server = new ServerReceiver(ServerHostField.getText(), ServerPortField.getText());
             server.start();
-        }
-        else {
+        } else {
             System.out.println("Wrong input format");
             //TODO add some kind of warning message, what causing problem
         }
@@ -53,8 +52,7 @@ public class Controller {
             client = new ClientSender(ClientHostField.getText(), ClientPortField.getText());
             client.start();
             System.out.println("Connection started");
-        }
-        else {
+        } else {
             System.out.println("Wrong input format");
             // TODO add some kind of warning message, what causing problem
         }
@@ -65,8 +63,7 @@ public class Controller {
         if (Validator.isValidSize(ClientSizeField.getText())) {
             client.send(ClientMessageField.getText(), ClientSizeField.getText());
             System.out.println("Data sent");
-        }
-        else {
+        } else {
             System.out.println("Wrong packet size");
             // TODO add some kind of warning message, what causing problem
         }

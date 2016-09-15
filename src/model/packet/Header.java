@@ -12,23 +12,23 @@ public class Header {
     public static final int HEADER_SIZE = 7;
 
     private byte[] nextSize;
-    private byte[] nextCount;
+    private byte[] nextSerialNumber;
     private byte[] type;
     private byte[] header;
 
     public Header(int size, int count, int type) {
         this.nextSize = Utils.intTo2ByteArray(size);
-        this.nextCount = Utils.intTo2ByteArray(count);
+        this.nextSerialNumber = Utils.intTo2ByteArray(count);
         this.type = new byte[] {(byte)type};
         this.header = null;
     }
 
     byte[] getHeader() {
         if (this.header == null) {
-            this.header = new byte[this.nextSize.length + this.nextCount.length + this.type.length];
+            this.header = new byte[this.nextSize.length + this.nextSerialNumber.length + this.type.length];
             System.arraycopy(this.nextSize, 0, this.header, 0, this.nextSize.length);
-            System.arraycopy(this.nextCount, 0, this.header, this.nextSize.length, this.nextCount.length);
-            System.arraycopy(this.type, 0, this.header, this.nextSize.length + this.nextCount.length, this.type.length);
+            System.arraycopy(this.nextSerialNumber, 0, this.header, this.nextSize.length, this.nextSerialNumber.length);
+            System.arraycopy(this.type, 0, this.header, this.nextSize.length + this.nextSerialNumber.length, this.type.length);
         }
         return header;
     }
@@ -41,12 +41,12 @@ public class Header {
         this.nextSize = nextSize;
     }
 
-    public byte[] getNextCount() {
-        return nextCount;
+    public byte[] getNextSerialNumber() {
+        return nextSerialNumber;
     }
 
-    public void setNextCount(byte[] nextCount) {
-        this.nextCount = nextCount;
+    public void setNextSerialNumber(byte[] nextSerialNumber) {
+        this.nextSerialNumber = nextSerialNumber;
     }
 
     public byte[] getType() {
