@@ -1,11 +1,11 @@
-package model.packet;
+package model.fragment;
 
 import model.Utils;
 
 /**
  * Created by Matus Cuper on 11.9.2016.
  *
- * Header class represents bytes in packet header of custom protocol without CRC checksum
+ * Header class represents bytes in fragment header of custom protocol without CRC checksum
  */
 public class Header {
 

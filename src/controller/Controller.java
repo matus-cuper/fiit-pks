@@ -64,7 +64,7 @@ public class Controller {
             client.send(ClientMessageField.getText(), ClientSizeField.getText());
             System.out.println("Data sent");
         } else {
-            System.out.println("Wrong packet size");
+            System.out.println("Wrong fragment size");
             // TODO add some kind of warning message, what causing problem
         }
     }

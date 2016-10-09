@@ -1,9 +1,9 @@
-package model.packet;
+package model.fragment;
 
 /**
  * Created by Matus Cuper on 11.9.2016.
  *
- * Checksum class represents CRC checksum of each sent packet.
+ * Checksum class represents CRC checksum of each sent fragment.
  * Provides data verification of received packets
  */
 public class Checksum {

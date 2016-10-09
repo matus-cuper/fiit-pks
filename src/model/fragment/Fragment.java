@@ -1,11 +1,11 @@
-package model.packet;
+package model.fragment;
 
 /**
  * Created by Matus Cuper on 11.9.2016.
  *
- * Packet class represents sent and received data stream via UDP
+ * Fragment class represents sent and received data stream via UDP
  */
-public class Packet {
+public class Fragment {
 
     public static final byte DATA_FIRST = 0;
     public static final byte DATA_SENT = 1;
@@ -21,7 +21,7 @@ public class Packet {
     private byte[] data;
     private byte[] packet;
 
-    public Packet(Header header, Checksum checksum, String data) {
+    public Fragment(Header header, Checksum checksum, String data) {
         this.header = header;
         this.checksum = checksum;
         this.data = data.getBytes();

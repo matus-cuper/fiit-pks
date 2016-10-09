@@ -1,8 +1,8 @@
 package model;
 
-import model.packet.Checksum;
-import model.packet.Header;
-import model.packet.Packet;
+import model.fragment.Checksum;
+import model.fragment.Fragment;
+import model.fragment.Header;
 
 import java.io.IOException;
 import java.net.*;
@@ -55,7 +55,7 @@ public class ClientSender {
         }
         else {
             this.sendFirstPacket(dataAndHeadSize);
-            this.sendOnePacket(dataAndHeadSize, 0, 0, Packet.DATA_LAST, data);
+            this.sendOnePacket(dataAndHeadSize, 0, 0, Fragment.DATA_LAST, data);
         }
     }
 
@@ -72,24 +72,24 @@ public class ClientSender {
         }
 
         for (int i = 1; i < frameSizedPackets; i++) {
-            this.sendOnePacket(size, size, i + 1, Packet.DATA_SENT, packetsData.get(i - 1));
+            this.sendOnePacket(size, size, i + 1, Fragment.DATA_SENT, packetsData.get(i - 1));
         }
 
-        // Send one but last packet
-        this.sendOnePacket(size, lastPacketSize + Header.HEADER_SIZE, frameSizedPackets + 1, Packet.DATA_SENT, packetsData.get(frameSizedPackets - 1));
-        // Send last packet
-        this.sendOnePacket(lastPacketSize + Header.HEADER_SIZE, 0, 0, Packet.DATA_LAST, packetsData.get(frameSizedPackets));
+        // Send one but last fragment
+        this.sendOnePacket(size, lastPacketSize + Header.HEADER_SIZE, frameSizedPackets + 1, Fragment.DATA_SENT, packetsData.get(frameSizedPackets - 1));
+        // Send last fragment
+        this.sendOnePacket(lastPacketSize + Header.HEADER_SIZE, 0, 0, Fragment.DATA_LAST, packetsData.get(frameSizedPackets));
     }
 
     private void sendOnePacket(int currentPacketSize, int nextPacketSize, int nextPacketSerialNumber, int packetType, String packetData) {
         Header header = new Header(nextPacketSize, nextPacketSerialNumber, packetType);
-        Packet packet = new Packet(header, new Checksum(header.toString()), packetData);
+        Fragment packet = new Fragment(header, new Checksum(header.toString()), packetData);
         DatagramPacket datagramPacket = new DatagramPacket(packet.getBytes(), currentPacketSize, this.address, this.port);
         this.sendDatagramPacket(datagramPacket);
     }
 
     private void sendFirstPacket(int packetSize) {
-        this.sendOnePacket(Header.HEADER_SIZE, packetSize, 1, Packet.DATA_FIRST, "");
+        this.sendOnePacket(Header.HEADER_SIZE, packetSize, 1, Fragment.DATA_FIRST, "");
     }
 
     private void sendDatagramPacket(DatagramPacket datagramPacket) {
