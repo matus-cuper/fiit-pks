@@ -8,18 +8,21 @@ import java.io.IOException;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
 /**
  * Created by Matus Cuper on 10.9.2016.
  *
  * ServerReceiver open UDP socket for sending packets to specific address and port
  */
-public class ClientSender {
+public class ClientSender extends Thread {
 
     private InetAddress address;
     private int port;
     private DatagramSocket socket;
     private String data;
+    private int fragmentSize;
+    private static Semaphore semaphore = new Semaphore(1);
 
     public ClientSender(InetAddress address, int port) {
         this.address = address;
@@ -40,7 +43,7 @@ public class ClientSender {
         }
     }
 
-    public void start() {
+    private void startConnection() {
         try {
             this.socket = new DatagramSocket();
         } catch (SocketException e) {
@@ -49,21 +52,53 @@ public class ClientSender {
         }
     }
 
-    public void send(String data, String size) {
-        this.data = data;
-        this.send(size);
+    public void run() {
+        // TODO unify
+        this.startConnection();
+        this.sendOneFragment(Header.HEADER_SIZE, 0, Fragment.START_CONNECTION, "");
+        try {
+            while (true) {
+                while (data == null && socket != null) {
+                    semaphore.acquire();
+                    this.sendOneFragment(Header.HEADER_SIZE, 0, Fragment.HOLD_CONNECTION, "");
+                    semaphore.release();
+                    sleep(1000);
+                }
+
+                // TODO refactor code
+                if (socket != null) {
+                    semaphore.acquire();
+                    this.send();
+                    data = null;
+                    semaphore.release();
+                }
+
+                if (socket == null)
+                    break;
+            }
+
+        } catch (InterruptedException e) {
+            // TODO add logging
+            e.printStackTrace();
+        }
     }
 
-    private void send(String size) {
-        int dataAndHeadSize = this.data.length() + Header.HEADER_SIZE;
+    public void send(String data, String size) {
+        this.data = data;
         // TODO change message length into size - utility verifier
-        int frameSize = Integer.parseInt(size);
+        this.fragmentSize = Integer.parseInt(size);
+    }
 
+    private synchronized void send() {
+        int dataAndHeadSize = this.data.length() + Header.HEADER_SIZE;
+
+        // TODO add number of fragments to process
         // Send first fragment, data incoming
         this.sendOneFragment(Header.HEADER_SIZE, 0, Fragment.DATA_FIRST, "");
 
-        if (dataAndHeadSize > frameSize)
-            this.sendData(frameSize);
+        // TODO remove this from everywhere
+        if (dataAndHeadSize > this.fragmentSize)
+            this.sendData();
         else
             this.sendOneFragment(dataAndHeadSize, 1, Fragment.DATA_LAST, data);
 
@@ -71,8 +106,8 @@ public class ClientSender {
         this.sendOneFragment(Header.HEADER_SIZE, 0, Fragment.DATA_LAST, "");
     }
 
-    private void sendData(int size) {
-        int fragmentDataSize = size - Header.HEADER_SIZE;
+    private synchronized void sendData() {
+        int fragmentDataSize = this.fragmentSize - Header.HEADER_SIZE;
         int frameSizedFragments = (this.data.length() / fragmentDataSize);
         int lastFragmentsSize = (this.data.length() % fragmentDataSize) + Header.HEADER_SIZE;
 
@@ -86,24 +121,22 @@ public class ClientSender {
 
         // Send all data with same fragment size
         for (int i = 0; i < frameSizedFragments; ++i) {
-            this.sendOneFragment(size, i + 1, Fragment.DATA_SENT, fragmentsData.get(i));
+            this.sendOneFragment(this.fragmentSize, i + 1, Fragment.DATA_SENT, fragmentsData.get(i));
         }
 
         // Send last data fragment only if fragment contains data
         if (lastFragmentsSize > Header.HEADER_SIZE)
             this.sendOneFragment(lastFragmentsSize, fragmentsData.size(), Fragment.DATA_SENT, fragmentsData.get(fragmentsData.size() - 1));
-
-        data = null;
     }
 
-    private void sendOneFragment(int fragmentSize, int fragmentSerialNumber, int fragmentType, String fragmentData) {
+    private synchronized void sendOneFragment(int fragmentSize, int fragmentSerialNumber, int fragmentType, String fragmentData) {
         Header header = new Header(fragmentSize, fragmentSerialNumber, fragmentType);
         Fragment fragment = new Fragment(header, new Checksum(header.toString() + fragmentData), fragmentData);
         DatagramPacket datagramPacket = new DatagramPacket(fragment.getBytes(), fragmentSize, this.address, this.port);
         this.sendDatagramPacket(datagramPacket);
     }
 
-    private void sendDatagramPacket(DatagramPacket datagramPacket) {
+    private synchronized void sendDatagramPacket(DatagramPacket datagramPacket) {
         try {
             this.socket.send(datagramPacket);
         } catch (IOException e) {
@@ -112,7 +145,18 @@ public class ClientSender {
         }
     }
 
-    public void stop() {
+    public void stopConnection() {
+
+        try {
+            semaphore.acquire();
+            this.sendOneFragment(Header.HEADER_SIZE, 0, Fragment.STOP_CONNECTION, "");
+            semaphore.release();
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        data = null;
         if (this.socket != null) {
             this.socket.close();
             this.socket = null;
@@ -141,5 +185,13 @@ public class ClientSender {
 
     public void setData(String data) {
         this.data = data;
+    }
+
+    public int getFragmentSize() {
+        return fragmentSize;
+    }
+
+    public void setFragmentSize(int fragmentSize) {
+        this.fragmentSize = fragmentSize;
     }
 }

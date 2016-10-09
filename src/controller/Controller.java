@@ -50,6 +50,7 @@ public class Controller {
     public void handleClientConnectButton() {
         if (Validator.isValidHost(ClientHostField.getText(), ClientPortField.getText())) {
             client = new ClientSender(ClientHostField.getText(), ClientPortField.getText());
+            // TODO need to kill thread, because it runs forever
             client.start();
             System.out.println("Connection started");
         } else {
@@ -71,7 +72,7 @@ public class Controller {
 
     @FXML
     public void handleClientDisconnectButton() {
-        client.stop();
+        client.stopConnection();
         System.out.println("Connection ended");
     }
 
