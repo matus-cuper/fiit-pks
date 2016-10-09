@@ -49,47 +49,47 @@ public class ClientSender {
         int dataAndHeadSize = data.length() + Header.HEADER_SIZE;
         // TODO change message length into size - utility verifier
         int frameSize = Integer.parseInt(size);
-        if (dataAndHeadSize > frameSize) {
-            this.sendFirstPacket(frameSize);
+
+        // Send first fragment, data incoming
+        this.sendOneFragment(Header.HEADER_SIZE, 0, Fragment.DATA_FIRST, "");
+
+        if (dataAndHeadSize > frameSize)
             this.sendData(data, frameSize);
-        }
-        else {
-            this.sendFirstPacket(dataAndHeadSize);
-            this.sendOnePacket(dataAndHeadSize, 0, 0, Fragment.DATA_LAST, data);
-        }
+        else
+            this.sendOneFragment(dataAndHeadSize, 1, Fragment.DATA_LAST, data);
+
+        // Send last fragment, all data was sent
+        this.sendOneFragment(Header.HEADER_SIZE, 0, Fragment.DATA_LAST, "");
     }
 
     private void sendData(String data, int size) {
-        int packetDataSize = size - Header.HEADER_SIZE;
-        int frameSizedPackets = (data.length() / packetDataSize);
-        int lastPacketSize = (data.length() % packetDataSize);
+        int fragmentDataSize = size - Header.HEADER_SIZE;
+        int frameSizedFragments = (data.length() / fragmentDataSize);
+        int lastFragmentsSize = (data.length() % fragmentDataSize) + Header.HEADER_SIZE;
+
+        // Break up data into chunks with specified size
         int index = 0;
-        List<String> packetsData = new ArrayList<>();
-
+        List<String> fragmentsData = new ArrayList<>();
         while (index < data.length()) {
-            packetsData.add(data.substring(index, Math.min(index + packetDataSize, data.length())));
-            index += packetDataSize;
+            fragmentsData.add(data.substring(index, Math.min(index + fragmentDataSize, data.length())));
+            index += fragmentDataSize;
         }
 
-        for (int i = 1; i < frameSizedPackets; i++) {
-            this.sendOnePacket(size, size, i + 1, Fragment.DATA_SENT, packetsData.get(i - 1));
+        // Send all data with same fragment size
+        for (int i = 0; i < frameSizedFragments; ++i) {
+            this.sendOneFragment(size, i + 1, Fragment.DATA_SENT, fragmentsData.get(i));
         }
 
-        // Send one but last fragment
-        this.sendOnePacket(size, lastPacketSize + Header.HEADER_SIZE, frameSizedPackets + 1, Fragment.DATA_SENT, packetsData.get(frameSizedPackets - 1));
-        // Send last fragment
-        this.sendOnePacket(lastPacketSize + Header.HEADER_SIZE, 0, 0, Fragment.DATA_LAST, packetsData.get(frameSizedPackets));
+        // Send last data fragment only if fragment contains data
+        if (lastFragmentsSize > Header.HEADER_SIZE)
+            this.sendOneFragment(lastFragmentsSize, fragmentsData.size(), Fragment.DATA_SENT, fragmentsData.get(fragmentsData.size() - 1));
     }
 
-    private void sendOnePacket(int currentPacketSize, int nextPacketSize, int nextPacketSerialNumber, int packetType, String packetData) {
-        Header header = new Header(nextPacketSize, nextPacketSerialNumber, packetType);
-        Fragment packet = new Fragment(header, new Checksum(header.toString()), packetData);
-        DatagramPacket datagramPacket = new DatagramPacket(packet.getBytes(), currentPacketSize, this.address, this.port);
+    private void sendOneFragment(int fragmentSize, int fragmentSerialNumber, int fragmentType, String fragmentData) {
+        Header header = new Header(fragmentSize, fragmentSerialNumber, fragmentType);
+        Fragment fragment = new Fragment(header, new Checksum(header.toString() + fragmentData), fragmentData);
+        DatagramPacket datagramPacket = new DatagramPacket(fragment.getBytes(), fragmentSize, this.address, this.port);
         this.sendDatagramPacket(datagramPacket);
-    }
-
-    private void sendFirstPacket(int packetSize) {
-        this.sendOnePacket(Header.HEADER_SIZE, packetSize, 1, Fragment.DATA_FIRST, "");
     }
 
     private void sendDatagramPacket(DatagramPacket datagramPacket) {
