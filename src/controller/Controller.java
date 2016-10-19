@@ -19,21 +19,6 @@ public class Controller {
     private TextField ServerHostField;
     @FXML
     private TextField ServerPortField;
-
-
-    @FXML
-    public void handleServerListenButton(ActionEvent event) {
-        if (Validator.isValidHost(ServerHostField.getText(), ServerPortField.getText())) {
-            ServerReceiver server = new ServerReceiver(ServerHostField.getText(), ServerPortField.getText());
-            server.start();
-        } else {
-            System.out.println("Wrong input format");
-            //TODO add some kind of warning message, what causing problem
-        }
-    }
-
-
-
     @FXML
     private TextField ClientHostField;
     @FXML
@@ -42,9 +27,19 @@ public class Controller {
     private TextField ClientSizeField;
     @FXML
     private TextArea ClientMessageField;
-
     @FXML
     private TextField ClientFileField;
+    // TODO Reoder methods
+    @FXML
+    public void handleServerListenButton(ActionEvent event) {
+        if (Validator.isValidHost(ServerHostField.getText(), ServerPortField.getText())) {
+            ServerReceiver server = new ServerReceiver(ServerHostField.getText(), ServerPortField.getText());
+            server.start();
+        } else {
+            System.out.println("Wrong input format");
+            // TODO add some kind of warning message, what causing problem
+        }
+    }
 
     @FXML
     public void handleClientConnectButton() {
@@ -62,8 +57,14 @@ public class Controller {
     @FXML
     public void handleClientSendButton() {
         if (Validator.isValidSize(ClientSizeField.getText())) {
-            client.send(ClientMessageField.getText().getBytes(), ClientSizeField.getText());
-            System.out.println("Data sent");
+            if (ClientFileField.getText().isEmpty()) {
+                client.send(ClientMessageField.getText().getBytes(), ClientSizeField.getText(), ClientSender.MESSAGE);
+                System.out.println("Message sent");
+            }
+            else {
+                client.send((new model.FileReader(ClientFileField.getText())).getBytes(), ClientSizeField.getText(), ClientSender.FILE);
+                System.out.println("File sent");
+            }
         } else {
             System.out.println("Wrong fragment size");
             // TODO add some kind of warning message, what causing problem
@@ -88,5 +89,10 @@ public class Controller {
 
     private void updateClientFileField(String filePath) {
         ClientFileField.setText(filePath);
+    }
+
+    @FXML
+    private void handleClientFileField() {
+        ClientFileField.setText("");
     }
 }
