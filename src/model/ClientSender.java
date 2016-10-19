@@ -94,7 +94,7 @@ public class ClientSender extends Thread {
 
         // TODO add number of fragments to process
         // Send first fragment, data incoming
-        this.sendOneFragment(Header.HEADER_SIZE, 0, Fragment.DATA_FIRST, "");
+        this.sendOneFragment(Header.HEADER_SIZE, 0, Fragment.DATA_FIRST_MESSAGE, "");
 
         // TODO remove this from everywhere
         if (dataAndHeadSize > this.fragmentSize)

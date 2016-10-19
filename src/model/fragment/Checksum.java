@@ -18,7 +18,7 @@ public class Checksum {
         this.computeChecksum(data);
     }
 
-        private void computeChecksum(String data) {
+    private void computeChecksum(String data) {
         this.checksum = new byte[] {16, 16};
     }
 
