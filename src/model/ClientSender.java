@@ -18,6 +18,9 @@ import java.util.concurrent.Semaphore;
  */
 public class ClientSender extends Thread {
 
+    public static final int MESSAGE = 1;
+    public static final int FILE = 2;
+
     private InetAddress address;
     private int port;
     private DatagramSocket socket;
@@ -85,8 +88,9 @@ public class ClientSender extends Thread {
         }
     }
 
-    public void send(byte[] data, String fragmentSize) {
+    public void send(byte[] data, String fragmentSize, int dataType) {
         this.data = data;
+        this.dataType = dataType;
         // TODO change message length into size - utility verifier
         this.fragmentSize = Integer.parseInt(fragmentSize);
     }
