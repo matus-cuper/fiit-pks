@@ -1,5 +1,7 @@
 package model.fragment;
 
+import org.jetbrains.annotations.Contract;
+
 /**
  * Created by Matus Cuper on 11.9.2016.
  *
@@ -18,26 +20,29 @@ public class Fragment {
     public static final byte DATA_RESENT = 8;
 
     private Header header;
-    private Checksum checksum;
+    private MyChecksum myChecksum;
     private byte[] data;
     private byte[] packet;
 
-    public Fragment(Header header, Checksum checksum, String data) {
+    public Fragment(MyChecksum myChecksum, Header header, byte[] data) {
+        this.myChecksum = myChecksum;
         this.header = header;
-        this.checksum = checksum;
-        this.data = data.getBytes();
-        this.packet = null;
+        this.data = data;
+        setBytes();
     }
 
     public byte[] getBytes() {
-        if (packet == null) {
-            packet = new byte[this.header.getHeader().length + this.checksum.getChecksum().length + this.data.length];
-            System.arraycopy(this.header.getHeader(), 0, this.packet, 0, this.header.getHeader().length);
-            System.arraycopy(this.checksum.getChecksum(), 0, this.packet, this.header.getHeader().length, this.checksum.getChecksum().length);
-            System.arraycopy(this.data, 0, this.packet, this.header.getHeader().length + this.checksum.getChecksum().length, this.data.length);
-        }
         return packet;
+    }
 
+    private void setBytes() {
+        byte[] packet = new byte[this.myChecksum.getChecksum().length + this.header.getLength() + this.getDataLength()];
+        System.arraycopy(this.myChecksum.getChecksum(), 0, packet, 0, this.myChecksum.getChecksum().length);
+        System.arraycopy(this.header.getHeader(), 0, packet, this.myChecksum.getChecksum().length, this.header.getLength());
+        if (data != null)
+            System.arraycopy(this.data, 0, packet, this.myChecksum.getChecksum().length + this.header.getLength(), this.getDataLength());
+
+        this.packet = packet;
     }
 
     public Header getHeader() {
@@ -48,12 +53,12 @@ public class Fragment {
         this.header = header;
     }
 
-    public Checksum getChecksum() {
-        return checksum;
+    public MyChecksum getMyChecksum() {
+        return myChecksum;
     }
 
-    public void setChecksum(Checksum checksum) {
-        this.checksum = checksum;
+    public void setMyChecksum(MyChecksum myChecksum) {
+        this.myChecksum = myChecksum;
     }
 
     public byte[] getData() {
@@ -62,5 +67,10 @@ public class Fragment {
 
     public void setData(byte[] data) {
         this.data = data;
+    }
+
+    @Contract(pure = true)
+    private int getDataLength() {
+        return (data == null) ? 0 : data.length;
     }
 }

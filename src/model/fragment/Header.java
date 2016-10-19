@@ -9,44 +9,49 @@ import model.Utils;
  */
 public class Header {
 
-    public static final int HEADER_SIZE = 7;
+    public static final int HEADER_SIZE = 9;
 
-    private byte[] nextSize;
-    private byte[] nextSerialNumber;
+    private byte[] size;
+    private byte[] serialNumber;
     private byte[] type;
     private byte[] header;
 
-    public Header(int size, int count, int type) {
-        this.nextSize = Utils.intTo2ByteArray(size);
-        this.nextSerialNumber = Utils.intTo2ByteArray(count);
+    public Header(int size, int serialNumber, int type) {
+        this.size = Utils.intTo2ByteArray(size);
+        this.serialNumber = Utils.intTo2ByteArray(serialNumber);
         this.type = new byte[] {(byte)type};
-        this.header = null;
+        this.header = getHeader();
     }
 
-    byte[] getHeader() {
+    public byte[] getHeader() {
+        // TODO do code refactor
         if (this.header == null) {
-            this.header = new byte[this.nextSize.length + this.nextSerialNumber.length + this.type.length];
-            System.arraycopy(this.nextSize, 0, this.header, 0, this.nextSize.length);
-            System.arraycopy(this.nextSerialNumber, 0, this.header, this.nextSize.length, this.nextSerialNumber.length);
-            System.arraycopy(this.type, 0, this.header, this.nextSize.length + this.nextSerialNumber.length, this.type.length);
+            this.header = new byte[this.size.length + this.serialNumber.length + this.type.length];
+            System.arraycopy(this.size, 0, this.header, 0, this.size.length);
+            System.arraycopy(this.serialNumber, 0, this.header, this.size.length, this.serialNumber.length);
+            System.arraycopy(this.type, 0, this.header, this.size.length + this.serialNumber.length, this.type.length);
         }
         return header;
     }
 
-    public byte[] getNextSize() {
-        return nextSize;
+    public int getLength() {
+        return this.header.length;
     }
 
-    public void setNextSize(byte[] nextSize) {
-        this.nextSize = nextSize;
+    public byte[] getSize() {
+        return size;
     }
 
-    public byte[] getNextSerialNumber() {
-        return nextSerialNumber;
+    public void setSize(byte[] size) {
+        this.size = size;
     }
 
-    public void setNextSerialNumber(byte[] nextSerialNumber) {
-        this.nextSerialNumber = nextSerialNumber;
+    public byte[] getSerialNumber() {
+        return serialNumber;
+    }
+
+    public void setSerialNumber(byte[] serialNumber) {
+        this.serialNumber = serialNumber;
     }
 
     public byte[] getType() {

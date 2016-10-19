@@ -62,7 +62,7 @@ public class Controller {
     @FXML
     public void handleClientSendButton() {
         if (Validator.isValidSize(ClientSizeField.getText())) {
-            client.send(ClientMessageField.getText(), ClientSizeField.getText());
+            client.send(ClientMessageField.getText().getBytes(), ClientSizeField.getText());
             System.out.println("Data sent");
         } else {
             System.out.println("Wrong fragment size");
