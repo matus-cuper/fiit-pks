@@ -1,6 +1,7 @@
 package sample;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -19,5 +20,6 @@ public class App extends Application {
 
     public static void main(String[] args) {
         launch(args);
+        Platform.exit();
     }
 }
