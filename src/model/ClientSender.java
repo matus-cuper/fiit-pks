@@ -32,12 +32,12 @@ public class ClientSender extends Thread {
     public ClientSender(InetAddress address, int port) {
         this.address = address;
         this.port = port;
-        this.data = null;
+        data = null;
     }
 
     public ClientSender(String address, String port) {
-        this.data = null;
-        this.socket = null;
+        data = null;
+        socket = null;
         this.port = Integer.parseInt(port);
         // TODO add utility verifier
         try {
@@ -59,13 +59,13 @@ public class ClientSender extends Thread {
 
     public void run() {
         // TODO unify
-        this.startConnection();
-        this.sendOneFragment(Header.HEADER_SIZE, 0, Fragment.START_CONNECTION, null);
+        startConnection();
+        sendOneFragment(Header.HEADER_SIZE, 0, Fragment.START_CONNECTION, null);
         try {
             while (true) {
                 while (data == null && socket != null) {
                     semaphore.acquire();
-                    this.sendOneFragment(Header.HEADER_SIZE, 0, Fragment.HOLD_CONNECTION, null);
+                    sendOneFragment(Header.HEADER_SIZE, 0, Fragment.HOLD_CONNECTION, null);
                     semaphore.release();
                     sleep(1000);
                 }
@@ -73,7 +73,7 @@ public class ClientSender extends Thread {
                 // TODO refactor code
                 if (socket != null) {
                     semaphore.acquire();
-                    this.send();
+                    send();
                     data = null;
                     semaphore.release();
                 }
@@ -101,42 +101,42 @@ public class ClientSender extends Thread {
         // TODO add number of fragments to process, is there need to null used dataType?
         // Send first fragment, data incoming
         if (this.dataType == MESSAGE)
-            this.sendOneFragment(Header.HEADER_SIZE, 0, Fragment.DATA_FIRST_MESSAGE, null);
+            sendOneFragment(Header.HEADER_SIZE, 0, Fragment.DATA_FIRST_MESSAGE, null);
         else
-            this.sendOneFragment(Header.HEADER_SIZE, 0, Fragment.DATA_FIRST_FILE, null);
+            sendOneFragment(Header.HEADER_SIZE, 0, Fragment.DATA_FIRST_FILE, null);
 
         // TODO remove this from everywhere
         if (dataAndHeadSize > this.fragmentSize)
-            this.sendData();
+            sendData();
         else
-            this.sendOneFragment(dataAndHeadSize, 1, Fragment.DATA_LAST, data);
+            sendOneFragment(dataAndHeadSize, 1, Fragment.DATA_LAST, data);
 
         // Send last fragment, all data was sent
-        this.sendOneFragment(Header.HEADER_SIZE, 0, Fragment.DATA_LAST, null);
+        sendOneFragment(Header.HEADER_SIZE, 0, Fragment.DATA_LAST, null);
     }
 
     private synchronized void sendData() {
-        int fragmentDataSize = this.fragmentSize - Header.HEADER_SIZE;
-        int frameSizedFragments = (this.data.length / fragmentDataSize);
-        int lastFragmentsSize = (this.data.length % fragmentDataSize) + Header.HEADER_SIZE;
+        int fragmentDataSize = fragmentSize - Header.HEADER_SIZE;
+        int frameSizedFragments = (data.length / fragmentDataSize);
+        int lastFragmentsSize = (data.length % fragmentDataSize) + Header.HEADER_SIZE;
 
         // Break up data into chunks with specified size
         int index = 0;
         List<byte[]> fragmentsData = new ArrayList<>();
-        while (index < this.data.length) {
-            fragmentsData.add(Arrays.copyOfRange(this.data, index, Math.min(index + fragmentDataSize, this.data.length)));
-            //(index, Math.min(index + fragmentDataSize, this.data.length));
+        while (index < data.length) {
+            fragmentsData.add(Arrays.copyOfRange(data, index, Math.min(index + fragmentDataSize, data.length)));
+            //(index, Math.min(index + fragmentDataSize, data.length));
             index += fragmentDataSize;
         }
 
         // Send all data with same fragment size
         for (int i = 0; i < frameSizedFragments; ++i) {
-            this.sendOneFragment(this.fragmentSize, i + 1, Fragment.DATA_SENT, fragmentsData.get(i));
+            sendOneFragment(fragmentSize, i + 1, Fragment.DATA_SENT, fragmentsData.get(i));
         }
 
         // Send last data fragment only if fragment contains data
         if (lastFragmentsSize > Header.HEADER_SIZE)
-            this.sendOneFragment(lastFragmentsSize, fragmentsData.size(), Fragment.DATA_SENT, fragmentsData.get(fragmentsData.size() - 1));
+            sendOneFragment(lastFragmentsSize, fragmentsData.size(), Fragment.DATA_SENT, fragmentsData.get(fragmentsData.size() - 1));
     }
 
     private synchronized void sendOneFragment(int fragmentSize, int fragmentSerialNumber, int fragmentType, byte[] fragmentData) {
@@ -153,13 +153,13 @@ public class ClientSender extends Thread {
         }
 
         Fragment fragment = new Fragment(new MyChecksum(tmp), header, fragmentData);
-        DatagramPacket datagramPacket = new DatagramPacket(fragment.getBytes(), fragmentSize, this.address, this.port);
-        this.sendDatagramPacket(datagramPacket);
+        DatagramPacket datagramPacket = new DatagramPacket(fragment.getBytes(), fragmentSize, address, port);
+        sendDatagramPacket(datagramPacket);
     }
 
     private synchronized void sendDatagramPacket(DatagramPacket datagramPacket) {
         try {
-            this.socket.send(datagramPacket);
+            socket.send(datagramPacket);
         } catch (IOException e) {
             // TODO add logging
             e.printStackTrace();
@@ -170,7 +170,7 @@ public class ClientSender extends Thread {
 
         try {
             semaphore.acquire();
-            this.sendOneFragment(Header.HEADER_SIZE, 0, Fragment.STOP_CONNECTION, null);
+            sendOneFragment(Header.HEADER_SIZE, 0, Fragment.STOP_CONNECTION, null);
             semaphore.release();
 
         } catch (InterruptedException e) {
@@ -178,9 +178,9 @@ public class ClientSender extends Thread {
         }
 
         data = null;
-        if (this.socket != null) {
-            this.socket.close();
-            this.socket = null;
+        if (socket != null) {
+            socket.close();
+            socket = null;
         }
     }
 

@@ -13,6 +13,7 @@ import java.net.*;
  */
 public class ServerReceiver extends Thread {
 
+    private DatagramSocket socket;
     private InetAddress address;
     private int port;
     private boolean listen;
@@ -23,7 +24,7 @@ public class ServerReceiver extends Thread {
     }
 
     public ServerReceiver(String address, String port) {
-        this.listen = true;
+        listen = true;
         try {
             System.out.println(address);
             this.address = InetAddress.getByName(address);
@@ -37,8 +38,8 @@ public class ServerReceiver extends Thread {
 
     public void run() {
         try {
-            DatagramSocket socket = new DatagramSocket(port);
-            while (this.listen) {
+            socket = new DatagramSocket(port);
+            while (listen) {
                 // TODO read size of data from first fragment
                 DatagramPacket packet = new DatagramPacket(new byte[Header.HEADER_SIZE], Header.HEADER_SIZE);
                 socket.receive(packet);
@@ -46,7 +47,8 @@ public class ServerReceiver extends Thread {
             }
         } catch (SocketException e) {
             //TODO add logging
-            e.printStackTrace();
+            if (listen)
+                e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
             //TODO add logging
@@ -54,7 +56,8 @@ public class ServerReceiver extends Thread {
     }
 
     public void interruptListening() {
-        this.listen = false;
+        listen = false;
+        socket.close();
     }
 
     public InetAddress getAddress() {

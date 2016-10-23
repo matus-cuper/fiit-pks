@@ -46,6 +46,12 @@ public class Controller {
     @FXML
     public void handleServerInterruptButton(ActionEvent event) {
         server.interruptListening();
+        server.interrupt();
+        try {
+            server.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
@@ -82,7 +88,11 @@ public class Controller {
     @FXML
     public void handleClientDisconnectButton() {
         client.stopConnection();
-        System.out.println("Connection ended");
+        try {
+            client.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
