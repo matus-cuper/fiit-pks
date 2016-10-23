@@ -37,30 +37,36 @@ public class Validator {
             return false;
         }
     }
-    // TODO make only one method for valid integer
+
     private static boolean isValidPort(String port) {
-        try {
-            int p = Integer.parseInt(port);
-            return (p >= 1024) && (p <= 65535);
-        } catch (Exception e) {
-            // TODO add logging
-            return false;
-        }
+        return isValidNumberInRange(port, 1024, 65535);
+        // TODO add configuration file
     }
 
     private static boolean isValidOctet(String octet) {
-        int o = Integer.parseInt(octet);
-        return (o >= 0) && (o <= 255);
+        return isValidNumberInRange(octet, 0, 255);
     }
 
     public static boolean isValidSize(String size) {
+        return isValidNumberInRange(size, 10, 65498);
+        // TODO add configuration file
+    }
+
+    private static boolean isValidNumberInRange(String s, int lower, int upper) {
+        if (isValidNumber(s)) {
+            int tmp = Integer.parseInt(s);
+            return (tmp >= lower) && (tmp <= upper);
+        }
+        return false;
+    }
+
+    public static boolean isValidNumber(String number) {
         try {
-            int s = Integer.parseInt(size);
-            // ODO add configuration file
-            return (s >= 8) && (s <= 65527);
-        } catch (Exception e) {
+            Integer.parseInt(number);
+        } catch (NumberFormatException e) {
             // TODO add logging
             return false;
         }
+        return true;
     }
 }
