@@ -13,7 +13,8 @@ import java.io.File;
 
 public class Controller {
 
-    private ClientSender client;
+    private ClientSender client = null;
+    private ServerReceiver server = null;
 
     @FXML
     private TextField ServerHostField;
@@ -33,7 +34,8 @@ public class Controller {
     @FXML
     public void handleServerListenButton(ActionEvent event) {
         if (Validator.isValidHost(ServerHostField.getText(), ServerPortField.getText())) {
-            ServerReceiver server = new ServerReceiver(ServerHostField.getText(), ServerPortField.getText());
+            server = new ServerReceiver(ServerHostField.getText(), ServerPortField.getText());
+            // TODO check if server exists
             server.start();
         } else {
             System.out.println("Wrong input format");
@@ -42,9 +44,15 @@ public class Controller {
     }
 
     @FXML
+    public void handleServerInterruptButton(ActionEvent event) {
+        server.interruptListening();
+    }
+
+    @FXML
     public void handleClientConnectButton() {
         if (Validator.isValidHost(ClientHostField.getText(), ClientPortField.getText())) {
             client = new ClientSender(ClientHostField.getText(), ClientPortField.getText());
+            // TODO check if client exists
             // TODO need to kill thread, because it runs forever
             client.start();
             System.out.println("Connection started");

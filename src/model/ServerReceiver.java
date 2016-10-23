@@ -1,5 +1,8 @@
 package model;
 
+import model.fragment.Fragment;
+import model.fragment.Header;
+
 import java.io.IOException;
 import java.net.*;
 
@@ -8,10 +11,11 @@ import java.net.*;
  *
  * ServerReceiver open UDP socket for listening on specific address (localhost) and port
  */
-public class ServerReceiver {
+public class ServerReceiver extends Thread {
 
     private InetAddress address;
     private int port;
+    private boolean listen;
 
     public ServerReceiver(InetAddress address, int port) {
         this.address = address;
@@ -19,6 +23,7 @@ public class ServerReceiver {
     }
 
     public ServerReceiver(String address, String port) {
+        this.listen = true;
         try {
             System.out.println(address);
             this.address = InetAddress.getByName(address);
@@ -30,13 +35,14 @@ public class ServerReceiver {
         }
     }
 
-    public void start() {
+    public void run() {
         try {
             DatagramSocket socket = new DatagramSocket(port);
-            for ( ;; ) {
-                DatagramPacket packet = new DatagramPacket(new byte[10], 10);
+            while (this.listen) {
+                // TODO read size of data from first fragment
+                DatagramPacket packet = new DatagramPacket(new byte[Header.HEADER_SIZE], Header.HEADER_SIZE);
                 socket.receive(packet);
-                System.out.println( packet.getAddress() + " " + packet.getPort() + ": " + new String(packet.getData()) ) ;
+                System.out.println( packet.getAddress() + " " + packet.getPort() + ": " + new Fragment(packet.getData()).getData().toString() ) ;
             }
         } catch (SocketException e) {
             //TODO add logging
@@ -45,6 +51,10 @@ public class ServerReceiver {
             e.printStackTrace();
             //TODO add logging
         }
+    }
+
+    public void interruptListening() {
+        this.listen = false;
     }
 
     public InetAddress getAddress() {

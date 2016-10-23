@@ -98,9 +98,12 @@ public class ClientSender extends Thread {
     private synchronized void send() {
         int dataAndHeadSize = this.data.length + Header.HEADER_SIZE;
 
-        // TODO add number of fragments to process
+        // TODO add number of fragments to process, is there need to null used dataType?
         // Send first fragment, data incoming
-        this.sendOneFragment(Header.HEADER_SIZE, 0, Fragment.DATA_FIRST_MESSAGE, null);
+        if (this.dataType == MESSAGE)
+            this.sendOneFragment(Header.HEADER_SIZE, 0, Fragment.DATA_FIRST_MESSAGE, null);
+        else
+            this.sendOneFragment(Header.HEADER_SIZE, 0, Fragment.DATA_FIRST_FILE, null);
 
         // TODO remove this from everywhere
         if (dataAndHeadSize > this.fragmentSize)

@@ -17,7 +17,7 @@
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <TextField fx:id="ServerHostField" layoutX="108.0" layoutY="28.0" text="127.0.0.1">
+                        <TextField fx:id="ServerHostField" disable="true" editable="false" layoutX="108.0" layoutY="28.0" text="127.0.0.1">
                            <font>
                               <Font size="16.0" />
                            </font>
@@ -42,16 +42,21 @@
                               <Font size="16.0" />
                            </font>
                         </Label>
-                        <TextField fx:id="ServerSizeField" editable="false" layoutX="188.0" layoutY="99.0" prefHeight="32.0" prefWidth="130.0" text="10">
+                        <TextField fx:id="ServerSizeField" disable="true" editable="false" layoutX="188.0" layoutY="99.0" prefHeight="32.0" prefWidth="130.0" text="10">
                            <font>
                               <Font size="16.0" />
                            </font>
                         </TextField>
-                        <Button fx:id="ServerListenButton" layoutX="248.0" layoutY="168.0" mnemonicParsing="false" onAction="#handleServerListenButton" text="Listen">
-                           <font>
-                              <Font size="16.0" />
-                           </font>
-                        </Button>
+                         <Button fx:id="ServerInterruptButton" layoutX="142.0" layoutY="135.0" mnemonicParsing="false" onAction="#handleServerInterruptButton" prefHeight="32.0" prefWidth="96.0" text="Interrupt">
+                             <font>
+                                 <Font size="16.0" />
+                             </font>
+                         </Button>
+                         <Button fx:id="ServerListenButton" layoutX="248.0" layoutY="135.0" mnemonicParsing="false" onAction="#handleServerListenButton" text="Listen">
+                             <font>
+                                 <Font size="16.0" />
+                             </font>
+                         </Button>
                      </children>
                   </AnchorPane>
             </content>

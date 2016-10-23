@@ -2,6 +2,8 @@ package model.fragment;
 
 import org.jetbrains.annotations.Contract;
 
+import java.util.Arrays;
+
 /**
  * Created by Matus Cuper on 11.9.2016.
  *
@@ -23,6 +25,10 @@ public class Fragment {
     private MyChecksum myChecksum;
     private byte[] data;
     private byte[] packet;
+
+    public Fragment(byte[] fragment) {
+        this.data = Arrays.copyOfRange(fragment, Header.HEADER_SIZE, fragment.length);
+    }
 
     public Fragment(MyChecksum myChecksum, Header header, byte[] data) {
         this.myChecksum = myChecksum;
