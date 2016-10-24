@@ -15,16 +15,16 @@ public class MyChecksum {
     private byte[] checksum;
 
     public MyChecksum(byte[] data) {
-        this.computeChecksum(data);
+        checksum = computeChecksum(data);
     }
 
-    private void computeChecksum(byte[] data) {
+    private byte[] computeChecksum(byte[] data) {
         Checksum checksum = new CRC32();
         checksum.update(data, 0, data.length);
-        this.checksum = this.longToBytes(checksum.getValue());
+        return longTo2Bytes(checksum.getValue());
     }
 
-    private byte[] longToBytes(long l) {
+    private byte[] longTo2Bytes(long l) {
         ByteBuffer buffer = ByteBuffer.allocate(Integer.BYTES);
         buffer.putInt((int) l);
         return buffer.array();

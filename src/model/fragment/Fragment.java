@@ -21,8 +21,6 @@ public class Fragment {
     public static final byte DATA_OK = 7;
     public static final byte DATA_RESENT = 8;
 
-    public static final int MAX_SIZE = 65498;
-
     private Header header;
     private MyChecksum myChecksum;
     private byte[] data;
@@ -39,14 +37,21 @@ public class Fragment {
         fragment = createFragment();
     }
 
-    public byte[] getFragment() {
+    public Fragment(MyChecksum myChecksum, byte[] headerAndData) {
+        this.myChecksum = myChecksum;
+        this.header = new Header(Arrays.copyOfRange(headerAndData, 0, Header.HEADER_SIZE));
+        this.data = Arrays.copyOfRange(headerAndData, Header.HEADER_SIZE, headerAndData.length);
+        fragment = createFragment();
+    }
+
+    public byte[] getBytes() {
         return fragment;
     }
 
     private byte[] createFragment() {
         byte[] fragment = new byte[Header.SIZE + getDataLength()];
         System.arraycopy(myChecksum.getChecksum(), 0, fragment, 0, Header.CHECKSUM_SIZE);
-        System.arraycopy(header.getHeader(), 0, fragment, Header.CHECKSUM_SIZE, Header.HEADER_SIZE);
+        System.arraycopy(header.getBytes(), 0, fragment, Header.CHECKSUM_SIZE, Header.HEADER_SIZE);
         if (data != null)
             System.arraycopy(data, 0, fragment, Header.SIZE, getDataLength());
 

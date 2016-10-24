@@ -6,7 +6,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 /**
- * Created by mcuper on 19.10.2016.
+ * Created by Matus Cuper on 19.10.2016.
+ *
+ * FileReader class reads file content and returns its like byte array
  */
 public class FileReader {
 
@@ -15,11 +17,11 @@ public class FileReader {
     public FileReader(String pathToFile) {
         FileInputStream fileInputStream;
         File file = new File(pathToFile);
-        this.fileContent = new byte[(int) file.length()];
+        fileContent = new byte[(int) file.length()];
 
         try {
             fileInputStream = new FileInputStream(file);
-            if (fileInputStream.read(this.fileContent) != file.length())
+            if (fileInputStream.read(fileContent) != file.length())
                 System.out.println("Error occurred while reading file");
             // TODO add some kind of error handling and test
             fileInputStream.close();
@@ -33,6 +35,6 @@ public class FileReader {
     }
 
     public byte[] getBytes() {
-        return this.fileContent;
+        return fileContent;
     }
 }

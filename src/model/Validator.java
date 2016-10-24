@@ -48,7 +48,7 @@ public class Validator {
     }
 
     public static boolean isValidSize(String size) {
-        return isValidNumberInRange(size, 10, 65498);
+        return isValidNumberInRange(size, 10, 65507);
         // TODO add configuration file
     }
 
@@ -60,7 +60,7 @@ public class Validator {
         return false;
     }
 
-    public static boolean isValidNumber(String number) {
+    private static boolean isValidNumber(String number) {
         try {
             Integer.parseInt(number);
         } catch (NumberFormatException e) {

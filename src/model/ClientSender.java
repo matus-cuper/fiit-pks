@@ -1,14 +1,12 @@
 package model;
 
+import model.fragment.Data;
 import model.fragment.Fragment;
 import model.fragment.Header;
 import model.fragment.MyChecksum;
 
 import java.io.IOException;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -18,15 +16,13 @@ import java.util.concurrent.Semaphore;
  */
 public class ClientSender extends Thread {
 
-    public static final int MESSAGE = 1;
-    public static final int FILE = 2;
+    public static final int MESSAGE = Fragment.DATA_FIRST_MESSAGE;
+    public static final int FILE = Fragment.DATA_FIRST_FILE;
 
+    private DatagramSocket socket;
     private InetAddress address;
     private int port;
-    private DatagramSocket socket;
-    private byte[] data;
-    private int dataType;
-    private int fragmentSize;
+    private Data data;
     private static Semaphore semaphore = new Semaphore(1);
 
     public ClientSender(InetAddress address, int port) {
@@ -38,14 +34,45 @@ public class ClientSender extends Thread {
     public ClientSender(String address, String port) {
         data = null;
         socket = null;
-        this.port = Integer.parseInt(port);
-        // TODO add utility verifier
+        if (Validator.isValidHost(address, port))
+        {
+            this.port = Integer.parseInt(port);
+            try {
+                this.address = InetAddress.getByName(address);
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+                // TODO add logging
+            }
+        }
+    }
+
+    public void run() {
+        // TODO unify
+        startConnection();
+        sendEmptyFragment(Fragment.START_CONNECTION);
         try {
-            this.address = InetAddress.getByName(address);
-        } catch (UnknownHostException e) {
+            while (true) {
+                while (data == null && socket != null) {
+                    semaphore.acquire();
+                    sendEmptyFragment(Fragment.HOLD_CONNECTION);
+                    semaphore.release();
+                    sleep(1000);
+                }
+
+                if (socket == null)
+                    break;
+                else {
+                    semaphore.acquire();
+                    send();
+                    data = null;
+                    semaphore.release();
+                }
+            }
+        } catch (InterruptedException e) {
             // TODO add logging
             e.printStackTrace();
         }
+        stopConnection();
     }
 
     private void startConnection() {
@@ -57,104 +84,117 @@ public class ClientSender extends Thread {
         }
     }
 
-    public void run() {
-        // TODO unify
-        startConnection();
-        sendOneFragment(Header.SIZE, 0, Fragment.START_CONNECTION, null);
-        try {
-            while (true) {
-                while (data == null && socket != null) {
-                    semaphore.acquire();
-                    sendOneFragment(Header.SIZE, 0, Fragment.HOLD_CONNECTION, null);
-                    semaphore.release();
-                    sleep(1000);
-                }
+    public void stopConnection() {
+        if (socket != null) {
+            try {
+                semaphore.acquire();
+                sendEmptyFragment(Fragment.STOP_CONNECTION);
+                semaphore.release();
 
-                // TODO refactor code
-                if (socket != null) {
-                    semaphore.acquire();
-                    send();
-                    data = null;
-                    semaphore.release();
-                }
-
-                if (socket == null)
-                    break;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
+        }
 
-        } catch (InterruptedException e) {
-            // TODO add logging
-            e.printStackTrace();
+        data = null;
+        if (socket != null) {
+            socket.close();
+            socket = null;
         }
     }
 
     public void send(byte[] data, String fragmentSize, int dataType) {
-        this.data = data;
-        this.dataType = dataType;
-        // TODO change message length into size - utility verifier
-        this.fragmentSize = Integer.parseInt(fragmentSize);
+        if (Validator.isValidSize(fragmentSize)) {
+            this.data = new Data(data, Integer.parseInt(fragmentSize) - Header.SIZE, dataType);
+            if (!this.data.isValid())
+                this.data = null;
+        }
+        if (data == null) {
+            System.out.println("Error occurred invalid parameters");
+            // TODO add logging
+        }
     }
 
     private synchronized void send() {
-        int dataAndHeadSize = this.data.length + Header.SIZE;
+        int dataAndHeadSize = data.getDataLength() + Header.SIZE;
 
-        // TODO add number of fragments to process, is there need to null used dataType?
-        // Send first fragment, data incoming
-        if (this.dataType == MESSAGE)
-            sendOneFragment(Header.SIZE, 0, Fragment.DATA_FIRST_MESSAGE, null);
+        // Send first fragment with metadata about incoming data stream
+        if (data.getDataType() == MESSAGE)
+            sendMetadataFragment(data.getDataChunkSize() + Header.HEADER_SIZE - 1, data.getDataChunksCount(), Fragment.DATA_FIRST_FILE);
         else
-            sendOneFragment(Header.SIZE, 0, Fragment.DATA_FIRST_FILE, null);
+            sendMetadataFragment(data.getDataChunkSize() + Header.SIZE - 1, data.getDataChunksCount(), Fragment.DATA_FIRST_MESSAGE);
 
-        // TODO remove this from everywhere
-        if (dataAndHeadSize > this.fragmentSize)
+        // Send all data in one fragment or several in loop
+        if (dataAndHeadSize > data.getDataChunkSize())
             sendData();
         else
-            sendOneFragment(dataAndHeadSize, 1, Fragment.DATA_LAST, data);
+            sendOneFragment(1, Fragment.DATA_SENT, data.getBytes());
 
-        // Send last fragment, all data was sent
-        sendOneFragment(Header.SIZE, 0, Fragment.DATA_LAST, null);
+        // Send last fragment after all data was sent
+        sendEmptyFragment(Fragment.DATA_LAST);
     }
 
     private synchronized void sendData() {
-        int fragmentDataSize = fragmentSize - Header.SIZE;
-        int frameSizedFragments = (data.length / fragmentDataSize);
-        int lastFragmentsSize = (data.length % fragmentDataSize) + Header.SIZE;
-
-        // Break up data into chunks with specified size
-        int index = 0;
-        List<byte[]> fragmentsData = new ArrayList<>();
-        while (index < data.length) {
-            fragmentsData.add(Arrays.copyOfRange(data, index, Math.min(index + fragmentDataSize, data.length)));
-            //(index, Math.min(index + fragmentDataSize, data.length));
-            index += fragmentDataSize;
-        }
-
         // Send all data with same fragment size
-        for (int i = 0; i < frameSizedFragments; ++i) {
-            sendOneFragment(fragmentSize, i + 1, Fragment.DATA_SENT, fragmentsData.get(i));
+        for (int i = 0; i < data.getDataChunksCount() - 1; ++i) {
+            sendOneFragment(i + 1, Fragment.DATA_SENT, data.getChunk(i));
         }
 
-        // Send last data fragment only if fragment contains data
-        if (lastFragmentsSize > Header.SIZE)
-            sendOneFragment(lastFragmentsSize, fragmentsData.size(), Fragment.DATA_SENT, fragmentsData.get(fragmentsData.size() - 1));
+        // Send last data fragment only if last fragment contains data
+        if (data.getDataLastChunkSize() > 0)
+            sendOneFragment(data.getDataChunksCount(), Fragment.DATA_SENT, data.getChunk(data.getDataChunksCount() - 1));
     }
 
-    private synchronized void sendOneFragment(int fragmentSize, int fragmentSerialNumber, int fragmentType, byte[] fragmentData) {
-        Header header = new Header(fragmentSize, fragmentSerialNumber, fragmentType);
-
-        byte[] tmp;
-        if (fragmentData != null) {
-            tmp = new byte[Header.HEADER_SIZE + fragmentData.length];
-            System.arraycopy(header.getHeader(), 0, tmp, 0, Header.HEADER_SIZE);
-            System.arraycopy(fragmentData, 0, tmp, Header.HEADER_SIZE, fragmentData.length);
-        }
-        else {
-            tmp = header.getHeader();
-        }
-
-        Fragment fragment = new Fragment(new MyChecksum(tmp), header, fragmentData);
-        DatagramPacket datagramPacket = new DatagramPacket(fragment.getFragment(), fragmentSize, address, port);
+    /**
+     * Computes checksum, then creates fragment ready to send and sends fragment
+     *
+     * @param fragmentWithoutChecksum    byte array of data ready to checksum
+     */
+    private synchronized void sendFragment(byte[] fragmentWithoutChecksum) {
+        Fragment fragment = new Fragment(new MyChecksum(fragmentWithoutChecksum), fragmentWithoutChecksum);
+        DatagramPacket datagramPacket = new DatagramPacket(fragment.getBytes(), Header.CHECKSUM_SIZE + fragmentWithoutChecksum.length, address, port);
         sendDatagramPacket(datagramPacket);
+    }
+
+    /**
+     * Creates header from parameters and creates fragment from header metadata and data,
+     * fragment size is computed from data
+     *
+     * @param fragmentSerialNumber    serial number of fragment
+     * @param fragmentType            fragment type required for determination of reaction on server side
+     * @param fragmentData            fragment data to send
+     */
+    private synchronized void sendOneFragment(int fragmentSerialNumber, int fragmentType, byte[] fragmentData) {
+        Header header = new Header(Header.SIZE + fragmentData.length, fragmentSerialNumber, fragmentType);
+
+        byte[] fragment = new byte[Header.HEADER_SIZE + fragmentData.length];
+        System.arraycopy(header.getBytes(), 0, fragment, 0, Header.HEADER_SIZE);
+        System.arraycopy(fragmentData, 0, fragment, Header.HEADER_SIZE, fragmentData.length);
+
+        sendFragment(fragment);
+    }
+
+    /**
+     * Creates header from parameters and creates empty fragment without data, it is required for start sending
+     *
+     * @param fragmentSize            size of whole fragment, it tells to server size of next fragments
+     * @param fragmentSerialNumber    serial number of fragment
+     * @param fragmentType            fragment type required for determination of reaction on server side
+     */
+    private synchronized void sendMetadataFragment(int fragmentSize, int fragmentSerialNumber, int fragmentType) {
+        Header header = new Header(Header.HEADER_SIZE + fragmentSize, fragmentSerialNumber, fragmentType);
+        sendFragment(header.getBytes());
+    }
+
+    /**
+     * Creates header from parameters and creates empty fragment without data, only with custom fragment type,
+     * only for signalization usage
+     *
+     * @param fragmentType    fragment type required for determination of reaction on server side
+     */
+    private synchronized void sendEmptyFragment(int fragmentType) {
+        Header header = new Header(Header.SIZE, 0, fragmentType);
+        sendFragment(header.getBytes());
     }
 
     private synchronized void sendDatagramPacket(DatagramPacket datagramPacket) {
@@ -163,24 +203,6 @@ public class ClientSender extends Thread {
         } catch (IOException e) {
             // TODO add logging
             e.printStackTrace();
-        }
-    }
-
-    public void stopConnection() {
-
-        try {
-            semaphore.acquire();
-            sendOneFragment(Header.SIZE, 0, Fragment.STOP_CONNECTION, null);
-            semaphore.release();
-
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        data = null;
-        if (socket != null) {
-            socket.close();
-            socket = null;
         }
     }
 
@@ -198,21 +220,5 @@ public class ClientSender extends Thread {
 
     public void setPort(int port) {
         this.port = port;
-    }
-
-    public byte[] getData() {
-        return data;
-    }
-
-    public void setData(byte[] data) {
-        this.data = data;
-    }
-
-    public int getFragmentSize() {
-        return fragmentSize;
-    }
-
-    public void setFragmentSize(int fragmentSize) {
-        this.fragmentSize = fragmentSize;
     }
 }
