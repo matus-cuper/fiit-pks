@@ -153,7 +153,7 @@ public class ClientSender extends Thread {
         }
 
         Fragment fragment = new Fragment(new MyChecksum(tmp), header, fragmentData);
-        DatagramPacket datagramPacket = new DatagramPacket(fragment.getBytes(), fragmentSize, address, port);
+        DatagramPacket datagramPacket = new DatagramPacket(fragment.getFragment(), fragmentSize, address, port);
         sendDatagramPacket(datagramPacket);
     }
 

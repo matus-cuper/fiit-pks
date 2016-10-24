@@ -21,10 +21,12 @@ public class Fragment {
     public static final byte DATA_OK = 7;
     public static final byte DATA_RESENT = 8;
 
+    public static final int MAX_SIZE = 65498;
+
     private Header header;
     private MyChecksum myChecksum;
     private byte[] data;
-    private byte[] packet;
+    private byte[] fragment;
 
     public Fragment(byte[] fragment) {
         this.data = Arrays.copyOfRange(fragment, Header.SIZE, fragment.length);
@@ -34,21 +36,21 @@ public class Fragment {
         this.myChecksum = myChecksum;
         this.header = header;
         this.data = data;
-        setBytes();
+        fragment = createFragment();
     }
 
-    public byte[] getBytes() {
-        return packet;
+    public byte[] getFragment() {
+        return fragment;
     }
 
-    private void setBytes() {
-        byte[] packet = new byte[Header.SIZE + this.getDataLength()];
-        System.arraycopy(this.myChecksum.getChecksum(), 0, packet, 0, this.myChecksum.getChecksum().length);
-        System.arraycopy(this.header.getHeader(), 0, packet, this.myChecksum.getChecksum().length, Header.HEADER_SIZE);
+    private byte[] createFragment() {
+        byte[] fragment = new byte[Header.SIZE + getDataLength()];
+        System.arraycopy(myChecksum.getChecksum(), 0, fragment, 0, Header.CHECKSUM_SIZE);
+        System.arraycopy(header.getHeader(), 0, fragment, Header.CHECKSUM_SIZE, Header.HEADER_SIZE);
         if (data != null)
-            System.arraycopy(this.data, 0, packet, Header.SIZE, this.getDataLength());
+            System.arraycopy(data, 0, fragment, Header.SIZE, getDataLength());
 
-        this.packet = packet;
+        return fragment;
     }
 
     public Header getHeader() {
