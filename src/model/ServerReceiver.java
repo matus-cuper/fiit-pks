@@ -41,7 +41,7 @@ public class ServerReceiver extends Thread {
             socket = new DatagramSocket(port);
             while (listen) {
                 // TODO read size of data from first fragment
-                DatagramPacket packet = new DatagramPacket(new byte[Header.HEADER_SIZE], Header.HEADER_SIZE);
+                DatagramPacket packet = new DatagramPacket(new byte[Header.SIZE], Header.SIZE);
                 socket.receive(packet);
                 System.out.println( packet.getAddress() + " " + packet.getPort() + ": " + new Fragment(packet.getData()).getData().toString() ) ;
             }

@@ -9,41 +9,43 @@ import model.Utils;
  */
 public class Header {
 
-    public static final int HEADER_SIZE = 9;
+    public static final int SIZE = 9;
+    public static final int CHECKSUM_SIZE = 4;
+    public static final int LENGTH_SIZE = 2;
+    public static final int SERIAL_SIZE = 2;
+    public static final int TYPE_SIZE = 1;
+    public static final int HEADER_SIZE = LENGTH_SIZE + SERIAL_SIZE + TYPE_SIZE;
 
-    private byte[] size;
+    private byte[] length;
     private byte[] serialNumber;
     private byte[] type;
     private byte[] header;
 
-    public Header(int size, int serialNumber, int type) {
-        this.size = Utils.intTo2ByteArray(size);
+    public Header(int length, int serialNumber, int type) {
+        this.length = Utils.intTo2ByteArray(length);
         this.serialNumber = Utils.intTo2ByteArray(serialNumber);
         this.type = new byte[] {(byte)type};
-        this.header = getHeader();
+        header = createHeader();
     }
 
     public byte[] getHeader() {
-        // TODO do code refactor
-        if (this.header == null) {
-            this.header = new byte[this.size.length + this.serialNumber.length + this.type.length];
-            System.arraycopy(this.size, 0, this.header, 0, this.size.length);
-            System.arraycopy(this.serialNumber, 0, this.header, this.size.length, this.serialNumber.length);
-            System.arraycopy(this.type, 0, this.header, this.size.length + this.serialNumber.length, this.type.length);
-        }
         return header;
     }
 
-    public int getLength() {
-        return this.header.length;
+    private byte[] createHeader() {
+        byte[] header = new byte[HEADER_SIZE];
+        System.arraycopy(length, 0, header, 0, LENGTH_SIZE);
+        System.arraycopy(serialNumber, 0, header, LENGTH_SIZE, SERIAL_SIZE);
+        System.arraycopy(type, 0, header, LENGTH_SIZE + SERIAL_SIZE, TYPE_SIZE);
+        return header;
     }
 
-    public byte[] getSize() {
-        return size;
+    public byte[] getLength() {
+        return length;
     }
 
-    public void setSize(byte[] size) {
-        this.size = size;
+    public void setLength(byte[] length) {
+        this.length = length;
     }
 
     public byte[] getSerialNumber() {

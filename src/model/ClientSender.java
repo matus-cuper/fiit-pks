@@ -60,12 +60,12 @@ public class ClientSender extends Thread {
     public void run() {
         // TODO unify
         startConnection();
-        sendOneFragment(Header.HEADER_SIZE, 0, Fragment.START_CONNECTION, null);
+        sendOneFragment(Header.SIZE, 0, Fragment.START_CONNECTION, null);
         try {
             while (true) {
                 while (data == null && socket != null) {
                     semaphore.acquire();
-                    sendOneFragment(Header.HEADER_SIZE, 0, Fragment.HOLD_CONNECTION, null);
+                    sendOneFragment(Header.SIZE, 0, Fragment.HOLD_CONNECTION, null);
                     semaphore.release();
                     sleep(1000);
                 }
@@ -96,14 +96,14 @@ public class ClientSender extends Thread {
     }
 
     private synchronized void send() {
-        int dataAndHeadSize = this.data.length + Header.HEADER_SIZE;
+        int dataAndHeadSize = this.data.length + Header.SIZE;
 
         // TODO add number of fragments to process, is there need to null used dataType?
         // Send first fragment, data incoming
         if (this.dataType == MESSAGE)
-            sendOneFragment(Header.HEADER_SIZE, 0, Fragment.DATA_FIRST_MESSAGE, null);
+            sendOneFragment(Header.SIZE, 0, Fragment.DATA_FIRST_MESSAGE, null);
         else
-            sendOneFragment(Header.HEADER_SIZE, 0, Fragment.DATA_FIRST_FILE, null);
+            sendOneFragment(Header.SIZE, 0, Fragment.DATA_FIRST_FILE, null);
 
         // TODO remove this from everywhere
         if (dataAndHeadSize > this.fragmentSize)
@@ -112,13 +112,13 @@ public class ClientSender extends Thread {
             sendOneFragment(dataAndHeadSize, 1, Fragment.DATA_LAST, data);
 
         // Send last fragment, all data was sent
-        sendOneFragment(Header.HEADER_SIZE, 0, Fragment.DATA_LAST, null);
+        sendOneFragment(Header.SIZE, 0, Fragment.DATA_LAST, null);
     }
 
     private synchronized void sendData() {
-        int fragmentDataSize = fragmentSize - Header.HEADER_SIZE;
+        int fragmentDataSize = fragmentSize - Header.SIZE;
         int frameSizedFragments = (data.length / fragmentDataSize);
-        int lastFragmentsSize = (data.length % fragmentDataSize) + Header.HEADER_SIZE;
+        int lastFragmentsSize = (data.length % fragmentDataSize) + Header.SIZE;
 
         // Break up data into chunks with specified size
         int index = 0;
@@ -135,7 +135,7 @@ public class ClientSender extends Thread {
         }
 
         // Send last data fragment only if fragment contains data
-        if (lastFragmentsSize > Header.HEADER_SIZE)
+        if (lastFragmentsSize > Header.SIZE)
             sendOneFragment(lastFragmentsSize, fragmentsData.size(), Fragment.DATA_SENT, fragmentsData.get(fragmentsData.size() - 1));
     }
 
@@ -144,9 +144,9 @@ public class ClientSender extends Thread {
 
         byte[] tmp;
         if (fragmentData != null) {
-            tmp = new byte[header.getLength() + fragmentData.length];
-            System.arraycopy(header.getHeader(), 0, tmp, 0, header.getLength());
-            System.arraycopy(fragmentData, 0, tmp, header.getLength(), fragmentData.length);
+            tmp = new byte[Header.HEADER_SIZE + fragmentData.length];
+            System.arraycopy(header.getHeader(), 0, tmp, 0, Header.HEADER_SIZE);
+            System.arraycopy(fragmentData, 0, tmp, Header.HEADER_SIZE, fragmentData.length);
         }
         else {
             tmp = header.getHeader();
@@ -170,7 +170,7 @@ public class ClientSender extends Thread {
 
         try {
             semaphore.acquire();
-            sendOneFragment(Header.HEADER_SIZE, 0, Fragment.STOP_CONNECTION, null);
+            sendOneFragment(Header.SIZE, 0, Fragment.STOP_CONNECTION, null);
             semaphore.release();
 
         } catch (InterruptedException e) {

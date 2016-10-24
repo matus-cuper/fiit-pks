@@ -93,6 +93,7 @@ public class Controller {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        System.out.println("Connection stopped");
     }
 
     @FXML

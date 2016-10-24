@@ -27,7 +27,7 @@ public class Fragment {
     private byte[] packet;
 
     public Fragment(byte[] fragment) {
-        this.data = Arrays.copyOfRange(fragment, Header.HEADER_SIZE, fragment.length);
+        this.data = Arrays.copyOfRange(fragment, Header.SIZE, fragment.length);
     }
 
     public Fragment(MyChecksum myChecksum, Header header, byte[] data) {
@@ -42,11 +42,11 @@ public class Fragment {
     }
 
     private void setBytes() {
-        byte[] packet = new byte[this.myChecksum.getChecksum().length + this.header.getLength() + this.getDataLength()];
+        byte[] packet = new byte[Header.SIZE + this.getDataLength()];
         System.arraycopy(this.myChecksum.getChecksum(), 0, packet, 0, this.myChecksum.getChecksum().length);
-        System.arraycopy(this.header.getHeader(), 0, packet, this.myChecksum.getChecksum().length, this.header.getLength());
+        System.arraycopy(this.header.getHeader(), 0, packet, this.myChecksum.getChecksum().length, Header.HEADER_SIZE);
         if (data != null)
-            System.arraycopy(this.data, 0, packet, this.myChecksum.getChecksum().length + this.header.getLength(), this.getDataLength());
+            System.arraycopy(this.data, 0, packet, Header.SIZE, this.getDataLength());
 
         this.packet = packet;
     }
