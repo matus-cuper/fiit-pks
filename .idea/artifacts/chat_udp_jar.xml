@@ -1,9 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="jar" name="chat_udp:jar">
-    <output-path>$PROJECT_DIR$/out/artifacts/chat_udp_jar</output-path>
-    <root id="archive" name="chat_udp.jar">
-      <element id="module-output" name="chat_udp" />
-      <element id="extracted-dir" path="/opt/JavaFXSceneBuilder2.0/runtime/jre/lib/ext/jfxrt.jar" path-in-jar="/" />
-    </root>
-  </artifact>
-</component>
