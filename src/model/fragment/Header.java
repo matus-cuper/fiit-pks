@@ -49,24 +49,24 @@ public class Header {
         return header;
     }
 
-    public byte[] getLength() {
-        return length;
+    public int getLength() {
+        return Utils.byte2ArrayToInt(length);
     }
 
     public void setLength(byte[] length) {
         this.length = length;
     }
 
-    public byte[] getSerialNumber() {
-        return serialNumber;
+    public int getSerialNumber() {
+        return Utils.byte2ArrayToInt(serialNumber);
     }
 
     public void setSerialNumber(byte[] serialNumber) {
         this.serialNumber = serialNumber;
     }
 
-    public byte[] getType() {
-        return type;
+    public int getType() {
+        return Utils.byteArrayToInt(type);
     }
 
     public void setType(byte[] type) {

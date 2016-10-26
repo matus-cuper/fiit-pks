@@ -26,8 +26,19 @@ public class Fragment {
     private byte[] data;
     private byte[] fragment;
 
-    public Fragment(byte[] fragment) {
-        this.data = Arrays.copyOfRange(fragment, Header.SIZE, fragment.length);
+    public Fragment(byte[] fragment) throws CorruptedDataException {
+        myChecksum = new MyChecksum(Arrays.copyOfRange(fragment, Header.CHECKSUM_SIZE, fragment.length));
+        boolean correctFragment = myChecksum.isChecksumCorrect(Arrays.copyOfRange(fragment, 0, Header.CHECKSUM_SIZE));
+
+        if (correctFragment) {
+            header = new Header(Arrays.copyOfRange(fragment, Header.CHECKSUM_SIZE, Header.SIZE));
+            if (fragment.length > Header.SIZE)
+                data = Arrays.copyOfRange(fragment, Header.SIZE, fragment.length);
+            this.fragment = createFragment();
+        }
+        else {
+            throw new CorruptedDataException();
+        }
     }
 
     public Fragment(MyChecksum myChecksum, Header header, byte[] data) {
@@ -39,8 +50,8 @@ public class Fragment {
 
     public Fragment(MyChecksum myChecksum, byte[] headerAndData) {
         this.myChecksum = myChecksum;
-        this.header = new Header(Arrays.copyOfRange(headerAndData, 0, Header.HEADER_SIZE));
-        this.data = Arrays.copyOfRange(headerAndData, Header.HEADER_SIZE, headerAndData.length);
+        header = new Header(Arrays.copyOfRange(headerAndData, 0, Header.HEADER_SIZE));
+        data = Arrays.copyOfRange(headerAndData, Header.HEADER_SIZE, headerAndData.length);
         fragment = createFragment();
     }
 
@@ -76,6 +87,10 @@ public class Fragment {
 
     public byte[] getData() {
         return data;
+    }
+
+    public String getDataPrintable() {
+        return (data == null) ? "" : new String(data);
     }
 
     public void setData(byte[] data) {

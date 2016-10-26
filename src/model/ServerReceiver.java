@@ -1,5 +1,7 @@
 package model;
 
+import model.fragment.CorruptedDataException;
+import model.fragment.Data;
 import model.fragment.Fragment;
 import model.fragment.Header;
 
@@ -16,6 +18,7 @@ public class ServerReceiver extends Thread {
     private DatagramSocket socket;
     private InetAddress address;
     private int port;
+    private Data data;
     private boolean listen;
 
     public ServerReceiver(InetAddress address, int port) {
@@ -41,18 +44,41 @@ public class ServerReceiver extends Thread {
             socket = new DatagramSocket(port);
             while (listen) {
                 // TODO read size of data from first fragment
-                DatagramPacket packet = new DatagramPacket(new byte[Header.SIZE], Header.SIZE);
-                socket.receive(packet);
-                System.out.println( packet.getAddress() + " " + packet.getPort() + ": " + new Fragment(packet.getData()).getData().toString() ) ;
+                DatagramPacket datagramPacket = new DatagramPacket(new byte[Header.SIZE], Header.SIZE);
+                socket.receive(datagramPacket);
+                Fragment fragment = new Fragment(datagramPacket.getData());
+                if (fragment.getHeader().getType() == Fragment.DATA_FIRST_MESSAGE)
+                    receiveMessage();
+                else if (fragment.getHeader().getType() == Fragment.DATA_FIRST_FILE)
+                    receiveFile();
+                System.out.println( datagramPacket.getAddress() + " " + datagramPacket.getPort()
+                        + " length " + fragment.getHeader().getLength()
+                        + " number " + fragment.getHeader().getSerialNumber()
+                        + " type " + fragment.getHeader().getType()
+                        + " data : " + fragment.getDataPrintable());
             }
+        } catch (CorruptedDataException e) {
+            e.printStackTrace();
         } catch (SocketException e) {
             //TODO add logging
             if (listen)
-                e.printStackTrace();
+            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
             //TODO add logging
         }
+    }
+
+    private void receiveMessage() {
+        // TODO implement
+    }
+
+    private void receiveFile() {
+        // TODO implement
+    }
+
+    private void receiveData() {
+        
     }
 
     public void interruptListening() {

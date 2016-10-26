@@ -12,4 +12,12 @@ public class Utils {
                 (byte)(value >>> 8),
                 (byte)value};
     }
+
+    public static int byte2ArrayToInt(byte[] value) {
+        return (value[0] & 0xFF) << 8 | (value[1] & 0xFF);
+    }
+
+    public static int byteArrayToInt(byte[] value) {
+        return (value[0] & 0xFF);
+    }
 }
