@@ -26,19 +26,12 @@ public class Fragment {
     private byte[] data;
     private byte[] fragment;
 
-    public Fragment(byte[] fragment) throws CorruptedDataException {
+    public Fragment(byte[] fragment) {
         myChecksum = new MyChecksum(Arrays.copyOfRange(fragment, Header.CHECKSUM_SIZE, fragment.length));
-        boolean correctFragment = myChecksum.isChecksumCorrect(Arrays.copyOfRange(fragment, 0, Header.CHECKSUM_SIZE));
-
-        if (correctFragment) {
-            header = new Header(Arrays.copyOfRange(fragment, Header.CHECKSUM_SIZE, Header.SIZE));
-            if (fragment.length > Header.SIZE)
-                data = Arrays.copyOfRange(fragment, Header.SIZE, fragment.length);
-            this.fragment = createFragment();
-        }
-        else {
-            throw new CorruptedDataException();
-        }
+        header = new Header(Arrays.copyOfRange(fragment, Header.CHECKSUM_SIZE, Header.SIZE));
+        if (fragment.length > Header.SIZE)
+            data = Arrays.copyOfRange(fragment, Header.SIZE, fragment.length);
+        this.fragment = createFragment();
     }
 
     public Fragment(MyChecksum myChecksum, Header header, byte[] data) {
@@ -53,6 +46,11 @@ public class Fragment {
         header = new Header(Arrays.copyOfRange(headerAndData, 0, Header.HEADER_SIZE));
         data = Arrays.copyOfRange(headerAndData, Header.HEADER_SIZE, headerAndData.length);
         fragment = createFragment();
+    }
+
+    public void isValid(byte[] data) throws CorruptedDataException {
+        if (!myChecksum.isChecksumCorrect(Arrays.copyOfRange(data, 0, Header.CHECKSUM_SIZE)))
+            throw new CorruptedDataException();
     }
 
     public byte[] getBytes() {

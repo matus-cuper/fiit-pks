@@ -23,6 +23,10 @@ public class Data {
     private int dataChunksCount;
     private List<byte[]> dataChunks;
 
+    public Data() {
+
+    }
+
     public Data(byte[] data, int dataChunkSize, int dataType) {
         this.data = data;
         this.dataChunkSize = dataChunkSize;

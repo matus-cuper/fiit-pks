@@ -7,6 +7,7 @@ import model.fragment.Header;
 
 import java.io.IOException;
 import java.net.*;
+import java.util.Arrays;
 
 /**
  * Created by Matus Cuper on 10.9.2016.
@@ -47,18 +48,20 @@ public class ServerReceiver extends Thread {
                 DatagramPacket datagramPacket = new DatagramPacket(new byte[Header.SIZE], Header.SIZE);
                 socket.receive(datagramPacket);
                 Fragment fragment = new Fragment(datagramPacket.getData());
-                if (fragment.getHeader().getType() == Fragment.DATA_FIRST_MESSAGE)
-                    receiveMessage();
-                else if (fragment.getHeader().getType() == Fragment.DATA_FIRST_FILE)
-                    receiveFile();
-                System.out.println( datagramPacket.getAddress() + " " + datagramPacket.getPort()
-                        + " length " + fragment.getHeader().getLength()
-                        + " number " + fragment.getHeader().getSerialNumber()
-                        + " type " + fragment.getHeader().getType()
-                        + " data : " + fragment.getDataPrintable());
+                fragment.isValid(datagramPacket.getData());
+
+                if(dataIncoming(fragment.getHeader().getType()))
+                    receiveData(datagramPacket, fragment);
+
+//                System.out.println( datagramPacket.getAddress() + " " + datagramPacket.getPort()
+//                        + " length " + fragment.getHeader().getLength()
+//                        + " number " + fragment.getHeader().getSerialNumber()
+//                        + " type " + fragment.getHeader().getType()
+//                        + " data : " + fragment.getDataPrintable());
             }
         } catch (CorruptedDataException e) {
             e.printStackTrace();
+            // TODO implement
         } catch (SocketException e) {
             //TODO add logging
             if (listen)
@@ -69,16 +72,58 @@ public class ServerReceiver extends Thread {
         }
     }
 
-    private void receiveMessage() {
+    private boolean dataIncoming(int fragmentType) {
+        return fragmentType == Fragment.DATA_FIRST_MESSAGE || fragmentType == Fragment.DATA_FIRST_FILE;
+    }
+
+    synchronized private void receiveData(DatagramPacket initialDatagramPacket, Fragment initialFragment) {
+        int fragmentType = initialFragment.getHeader().getType();
+        int chunkSize = initialFragment.getHeader().getLength();
+        int chunksCount = initialFragment.getHeader().getSerialNumber();
+        StringBuilder data = new StringBuilder();
+
+        try {
+            for (int i = 1; i <= chunksCount; ++i) {
+                DatagramPacket datagramPacket = new DatagramPacket(new byte[chunkSize], chunkSize);
+                socket.receive(datagramPacket);
+                Fragment fragment = new Fragment(datagramPacket.getData());
+
+                // Handle last incoming fragment, fixed buffer size with empty bytes computes different checksum
+                if (fragment.getHeader().getLength() != chunkSize) {
+                    fragment = new Fragment(Arrays.copyOfRange(datagramPacket.getData(), 0, fragment.getHeader().getLength()));
+                }
+                fragment.isValid(datagramPacket.getData());
+
+                // Ugly hack
+                data.append(new StringBuilder(new String( (fragment.getData() != null) ? fragment.getData() : new byte[1] )));
+//                System.out.println( datagramPacket.getAddress() + " " + datagramPacket.getPort()
+//                        + " length " + fragment.getHeader().getLength()
+//                        + " number " + fragment.getHeader().getSerialNumber()
+//                        + " type " + fragment.getHeader().getType()
+//                        + " data : " + fragment.getDataPrintable());
+            }
+        } catch (CorruptedDataException e) {
+            e.printStackTrace();
+            // TODO implement
+        } catch (IOException e) {
+            e.printStackTrace();
+            // TODO add logging
+        }
+
+        if (fragmentType == Fragment.DATA_FIRST_MESSAGE)
+            receiveMessage(String.valueOf(data).getBytes());
+        else
+            receiveFile(String.valueOf(data).getBytes());
+    }
+
+    synchronized private void receiveMessage(byte[] data) {
+        System.out.println("Received message is: " + new String(data));
         // TODO implement
     }
 
-    private void receiveFile() {
+    synchronized private void receiveFile(byte[] data) {
+        System.out.println("Received file is: " + new String(data));
         // TODO implement
-    }
-
-    private void receiveData() {
-        
     }
 
     public void interruptListening() {

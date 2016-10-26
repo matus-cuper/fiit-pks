@@ -37,10 +37,10 @@ public class MyChecksum {
     boolean isChecksumCorrect(byte[] checksum) {
         if (this.checksum == null || checksum == null)
             return false;
-        for (int i = 0; i < checksum.length; ++i) {
+
+        for (int i = 0; i < checksum.length; ++i)
             if (this.checksum[i] != checksum[i])
                 return false;
-        }
 
         return true;
     }
