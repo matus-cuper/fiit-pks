@@ -112,13 +112,13 @@ public class ServerReceiver extends Thread {
         }
 
         if (fragmentType == Fragment.DATA_FIRST_MESSAGE)
-            receiveMessage(String.valueOf(data).getBytes());
+            receiveMessage(String.valueOf(data).getBytes(), chunkSize);
         else
             receiveFile(String.valueOf(data).getBytes());
     }
 
-    synchronized private void receiveMessage(byte[] data) {
-        new MessageReceiver(new String(data));
+    synchronized private void receiveMessage(byte[] data, int fragmentSize) {
+        new MessageReceiver(new String(data), fragmentSize);
     }
 
     synchronized private void receiveFile(byte[] data) {
