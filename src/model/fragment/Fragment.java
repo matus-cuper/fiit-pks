@@ -1,7 +1,5 @@
 package model.fragment;
 
-import org.jetbrains.annotations.Contract;
-
 import java.util.Arrays;
 
 /**
@@ -95,7 +93,6 @@ public class Fragment {
         this.data = data;
     }
 
-    @Contract(pure = true)
     private int getDataLength() {
         return (data == null) ? 0 : data.length;
     }

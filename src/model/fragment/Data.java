@@ -1,7 +1,5 @@
 package model.fragment;
 
-import org.jetbrains.annotations.Contract;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -105,7 +103,6 @@ public class Data {
         this.dataChunks = dataChunks;
     }
 
-    @Contract(pure = true)
     public int getDataLength() {
         return (data == null) ? 0 : data.length;
     }
