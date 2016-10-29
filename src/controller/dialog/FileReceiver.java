@@ -3,9 +3,9 @@ package controller.dialog;
 import sample.InformationWindow;
 
 /**
- * Class for raising window after received file from client
- *
  * Created by Matus Cuper on 29.10.2016.
+ *
+ * Class for raising window after received file from client
  */
 public class FileReceiver {
 
