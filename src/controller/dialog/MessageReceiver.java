@@ -10,6 +10,6 @@ import sample.InformationWindow;
 public class MessageReceiver {
 
     public MessageReceiver(String message, int fragmentSize) {
-        InformationWindow.infoBox("Fragment size is " + fragmentSize + "bytes\n" + message, "Received message");
+        InformationWindow.infoBox("Fragment size is " + fragmentSize + " bytes\n" + message, "Received message");
     }
 }
