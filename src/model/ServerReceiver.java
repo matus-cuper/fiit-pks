@@ -1,5 +1,6 @@
 package model;
 
+import controller.listeners.MessageReceiver;
 import model.fragment.CorruptedDataException;
 import model.fragment.Data;
 import model.fragment.Fragment;
@@ -117,8 +118,7 @@ public class ServerReceiver extends Thread {
     }
 
     synchronized private void receiveMessage(byte[] data) {
-        System.out.println("Received message is: " + new String(data));
-        // TODO implement
+        new MessageReceiver(new String(data));
     }
 
     synchronized private void receiveFile(byte[] data) {
