@@ -23,14 +23,7 @@ public class ClientSender extends Thread {
     private InetAddress address;
     private int port;
     private Data data;
-    private boolean corruptedData;
     private static Semaphore semaphore = new Semaphore(1);
-
-    public ClientSender(InetAddress address, int port) {
-        this.address = address;
-        this.port = port;
-        data = null;
-    }
 
     public ClientSender(String address, String port) {
         data = null;
@@ -50,12 +43,14 @@ public class ClientSender extends Thread {
     public void run() {
         // TODO unify
         startConnection();
-        sendEmptyFragment(Fragment.START_CONNECTION);
+
         try {
             while (true) {
                 while (data == null && socket != null) {
                     semaphore.acquire();
-                    sendEmptyFragment(Fragment.HOLD_CONNECTION);
+                    do {
+                        sendEmptyFragment(Fragment.HOLD_CONNECTION);
+                    } while (!receivedDataOKFragment());
                     semaphore.release();
                     sleep(1000);
                 }
@@ -72,6 +67,9 @@ public class ClientSender extends Thread {
         } catch (InterruptedException e) {
             // TODO add logging
             e.printStackTrace();
+        } catch (IOException e) {
+            // TODO add logging
+            e.printStackTrace();
         }
         stopConnection();
     }
@@ -79,7 +77,14 @@ public class ClientSender extends Thread {
     private void startConnection() {
         try {
             this.socket = new DatagramSocket();
+
+            do {
+                sendEmptyFragment(Fragment.START_CONNECTION);
+            } while (!receivedDataOKFragment());
         } catch (SocketException e) {
+            // TODO add logging
+            e.printStackTrace();
+        } catch (IOException e) {
             // TODO add logging
             e.printStackTrace();
         }
@@ -104,9 +109,9 @@ public class ClientSender extends Thread {
         }
     }
 
-    public void send(byte[] data, String fragmentSize, int dataType) {
+    public void send(byte[] data, String fragmentSize, int dataType, boolean isDataCorrupted) {
         if (Validator.isValidSize(fragmentSize)) {
-            this.data = new Data(data, Integer.parseInt(fragmentSize) - Header.SIZE, dataType);
+            this.data = new Data(data, Integer.parseInt(fragmentSize) - Header.SIZE, dataType, isDataCorrupted);
             if (!this.data.isValid())
                 this.data = null;
         }
@@ -120,9 +125,9 @@ public class ClientSender extends Thread {
         int dataAndHeadSize = data.getDataLength() + Header.SIZE;
 
         // Send first fragment corrupted if it is needed by user
-        if (corruptedData)
+        if (data.isDataCorrupted())
             sendCorruptedFragment(data.getDataChunkSize() + Header.HEADER_SIZE - 1, data.getDataChunksCount(), Fragment.DATA_FIRST_FILE);
-        corruptedData = false;
+        data.setCorruptedData(false);
 
         // Send first fragment with metadata about incoming data stream
         if (data.getDataType() == MESSAGE)
@@ -216,6 +221,23 @@ public class ClientSender extends Thread {
         Fragment fragment = new Fragment(new MyChecksum(new byte[] {0}), header.getBytes());
         DatagramPacket datagramPacket = new DatagramPacket(fragment.getBytes(), Header.CHECKSUM_SIZE + header.getBytes().length, address, port);
         sendDatagramPacket(datagramPacket);
+    }
+
+    private synchronized boolean receivedDataOKFragment() throws IOException {
+        if (socket != null) {
+            DatagramPacket datagramPacket = new DatagramPacket(new byte[Header.SIZE], Header.SIZE);
+            socket.receive(datagramPacket);
+            Fragment fragment = new Fragment(datagramPacket.getData());
+
+            return fragment.getHeader().getType() == Fragment.DATA_OK;
+        }
+        // TODO test if if si needed
+        // TODO add some kind of wait millis
+        return false;
+    }
+
+    private synchronized void receiveDataResentFragment() {
+
     }
 
     private synchronized void sendDatagramPacket(DatagramPacket datagramPacket) {

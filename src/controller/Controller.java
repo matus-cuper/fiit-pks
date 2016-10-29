@@ -2,6 +2,7 @@ package controller;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import model.ClientSender;
@@ -30,6 +31,8 @@ public class Controller {
     private TextArea ClientMessageField;
     @FXML
     private TextField ClientFileField;
+    @FXML
+    private CheckBox ClientChecksumBox;
     // TODO Reoder methods
     @FXML
     public void handleServerListenButton(ActionEvent event) {
@@ -72,11 +75,11 @@ public class Controller {
     public void handleClientSendButton() {
         if (Validator.isValidSize(ClientSizeField.getText())) {
             if (ClientFileField.getText().isEmpty()) {
-                client.send(ClientMessageField.getText().getBytes(), ClientSizeField.getText(), ClientSender.MESSAGE);
+                client.send(ClientMessageField.getText().getBytes(), ClientSizeField.getText(), ClientSender.MESSAGE, ClientChecksumBox.isSelected());
                 System.out.println("Message sent");
             }
             else {
-                client.send((new model.FileReader(ClientFileField.getText())).getBytes(), ClientSizeField.getText(), ClientSender.FILE);
+                client.send((new model.FileReader(ClientFileField.getText())).getBytes(), ClientSizeField.getText(), ClientSender.FILE, ClientChecksumBox.isSelected());
                 System.out.println("File sent");
             }
         } else {

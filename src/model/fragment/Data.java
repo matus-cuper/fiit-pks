@@ -15,20 +15,19 @@ public class Data {
     private static final int MAX_CHUNKS_COUNT = 65535;
 
     private byte[] data;
+
     private int dataType;
+    private boolean isDataCorrupted;
     private int dataChunkSize;
     private int dataLastChunkSize;
     private int dataChunksCount;
     private List<byte[]> dataChunks;
 
-    public Data() {
-
-    }
-
-    public Data(byte[] data, int dataChunkSize, int dataType) {
+    public Data(byte[] data, int dataChunkSize, int dataType, boolean isDataCorrupted) {
         this.data = data;
         this.dataChunkSize = dataChunkSize;
         this.dataType = dataType;
+        this.isDataCorrupted = isDataCorrupted;
         computeMetadata();
         if (isValid())
             computeChunks();
@@ -52,58 +51,39 @@ public class Data {
         return (dataChunkSize <= MAX_CHUNK_SIZE && dataChunksCount <= MAX_CHUNKS_COUNT);
     }
 
-    public byte[] getChunk(int index) {
-        return dataChunks.get(index);
-    }
     public byte[] getBytes() {
         return data;
     }
 
-    public void setData(byte[] data) {
-        this.data = data;
+    public int getDataLength() {
+        return (data == null) ? 0 : data.length;
     }
 
     public int getDataType() {
         return dataType;
     }
 
-    public void setDataType(int dataType) {
-        this.dataType = dataType;
+    public boolean isDataCorrupted() {
+        return isDataCorrupted;
+    }
+
+    public void setCorruptedData(boolean corruptedData) {
+        this.isDataCorrupted = corruptedData;
     }
 
     public int getDataChunkSize() {
         return dataChunkSize;
     }
 
-    public void setDataChunkSize(int dataChunkSize) {
-        this.dataChunkSize = dataChunkSize;
-    }
-
     public int getDataLastChunkSize() {
         return dataLastChunkSize;
-    }
-
-    public void setDataLastChunkSize(int dataLastChunkSize) {
-        this.dataLastChunkSize = dataLastChunkSize;
     }
 
     public int getDataChunksCount() {
         return dataChunksCount;
     }
 
-    public void setDataChunksCount(int dataChunksCount) {
-        this.dataChunksCount = dataChunksCount;
-    }
-
-    public List<byte[]> getDataChunks() {
-        return dataChunks;
-    }
-
-    public void setDataChunks(List<byte[]> dataChunks) {
-        this.dataChunks = dataChunks;
-    }
-
-    public int getDataLength() {
-        return (data == null) ? 0 : data.length;
+    public byte[] getChunk(int index) {
+        return dataChunks.get(index);
     }
 }

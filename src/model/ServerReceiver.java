@@ -2,10 +2,7 @@ package model;
 
 import controller.dialog.FileReceiver;
 import controller.dialog.MessageReceiver;
-import model.fragment.CorruptedDataException;
-import model.fragment.Data;
-import model.fragment.Fragment;
-import model.fragment.Header;
+import model.fragment.*;
 
 import java.io.IOException;
 import java.net.*;
@@ -51,6 +48,7 @@ public class ServerReceiver extends Thread {
                 socket.receive(datagramPacket);
                 Fragment fragment = new Fragment(datagramPacket.getData());
                 fragment.isValid(datagramPacket.getData());
+                sendDataOKFragment(datagramPacket, fragment);
 
                 if(dataIncoming(fragment.getHeader().getType()))
                     receiveData(datagramPacket, fragment);
@@ -125,6 +123,15 @@ public class ServerReceiver extends Thread {
 
     synchronized private void receiveFile(byte[] data, int fragmentSize) {
         new FileReceiver("test.txt", fragmentSize);
+    }
+
+    synchronized private void sendDataOKFragment(DatagramPacket datagramPacket, Fragment fragment) throws IOException {
+        Header header = new Header(fragment.getHeader().getLength(), fragment.getHeader().getSerialNumber(), Fragment.DATA_OK);
+        Fragment newFragment = new Fragment(new MyChecksum(header.getBytes()), header.getBytes());
+        DatagramPacket newDatagramPacket = new DatagramPacket(newFragment.getBytes(), Header.SIZE, datagramPacket.getAddress(), datagramPacket.getPort());
+
+        if (socket != null)
+            socket.send(newDatagramPacket);
     }
 
     public void interruptListening() {
