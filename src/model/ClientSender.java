@@ -23,6 +23,7 @@ public class ClientSender extends Thread {
     private InetAddress address;
     private int port;
     private Data data;
+    private boolean corruptedData;
     private static Semaphore semaphore = new Semaphore(1);
 
     public ClientSender(InetAddress address, int port) {
@@ -118,11 +119,16 @@ public class ClientSender extends Thread {
     private synchronized void send() {
         int dataAndHeadSize = data.getDataLength() + Header.SIZE;
 
+        // Send first fragment corrupted if it is needed by user
+        if (corruptedData)
+            sendCorruptedFragment(data.getDataChunkSize() + Header.HEADER_SIZE - 1, data.getDataChunksCount(), Fragment.DATA_FIRST_FILE);
+        corruptedData = false;
+
         // Send first fragment with metadata about incoming data stream
         if (data.getDataType() == MESSAGE)
-            sendMetadataFragment(data.getDataChunkSize() + Header.HEADER_SIZE - 1, data.getDataChunksCount(), Fragment.DATA_FIRST_FILE);
+            sendMetadataFragment(data.getDataChunkSize() + Header.HEADER_SIZE - 1, data.getDataChunksCount(), Fragment.DATA_FIRST_MESSAGE);
         else
-            sendMetadataFragment(data.getDataChunkSize() + Header.SIZE - 1, data.getDataChunksCount(), Fragment.DATA_FIRST_MESSAGE);
+            sendMetadataFragment(data.getDataChunkSize() + Header.SIZE - 1, data.getDataChunksCount(), Fragment.DATA_FIRST_FILE);
 
         // Send all data in one fragment or several in loop
         if (dataAndHeadSize > data.getDataChunkSize())
@@ -195,6 +201,21 @@ public class ClientSender extends Thread {
     private synchronized void sendEmptyFragment(int fragmentType) {
         Header header = new Header(Header.SIZE, 0, fragmentType);
         sendFragment(header.getBytes());
+    }
+
+    /**
+     * Creates header from parameters and creates empty fragment without data, update checksum with wrong byte sequence,
+     * it causes CorruptedDataException on server site, which must be handled
+     *
+     * @param fragmentSize            size of whole fragment, it tells to server size of next fragments
+     * @param fragmentSerialNumber    serial number of fragment
+     * @param fragmentType            fragment type required for determination of reaction on server side
+     */
+    private synchronized void sendCorruptedFragment(int fragmentSize, int fragmentSerialNumber, int fragmentType) {
+        Header header = new Header(Header.HEADER_SIZE + fragmentSize, fragmentSerialNumber, fragmentType);
+        Fragment fragment = new Fragment(new MyChecksum(new byte[] {0}), header.getBytes());
+        DatagramPacket datagramPacket = new DatagramPacket(fragment.getBytes(), Header.CHECKSUM_SIZE + header.getBytes().length, address, port);
+        sendDatagramPacket(datagramPacket);
     }
 
     private synchronized void sendDatagramPacket(DatagramPacket datagramPacket) {
