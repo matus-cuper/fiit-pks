@@ -1,6 +1,7 @@
 package model;
 
-import controller.listeners.MessageReceiver;
+import controller.dialog.FileReceiver;
+import controller.dialog.MessageReceiver;
 import model.fragment.CorruptedDataException;
 import model.fragment.Data;
 import model.fragment.Fragment;
@@ -114,16 +115,16 @@ public class ServerReceiver extends Thread {
         if (fragmentType == Fragment.DATA_FIRST_MESSAGE)
             receiveMessage(String.valueOf(data).getBytes(), chunkSize);
         else
-            receiveFile(String.valueOf(data).getBytes());
+            receiveFile(String.valueOf(data).getBytes(), chunkSize);
+            // TODO add receiving file name
     }
 
     synchronized private void receiveMessage(byte[] data, int fragmentSize) {
         new MessageReceiver(new String(data), fragmentSize);
     }
 
-    synchronized private void receiveFile(byte[] data) {
-        System.out.println("Received file is: " + new String(data));
-        // TODO implement
+    synchronized private void receiveFile(byte[] data, int fragmentSize) {
+        new FileReceiver("test.txt", fragmentSize);
     }
 
     public void interruptListening() {

@@ -1,6 +1,6 @@
-package controller.listeners;
+package controller.dialog;
 
-import sample.MessageWindow;
+import sample.InformationWindow;
 
 /**
  * Class for raising window after received message from client
@@ -10,6 +10,6 @@ import sample.MessageWindow;
 public class MessageReceiver {
 
     public MessageReceiver(String message, int fragmentSize) {
-        MessageWindow.infoBox("Fragment size is " + fragmentSize + "bytes\n" + message, "Received message");
+        InformationWindow.infoBox("Fragment size is " + fragmentSize + "bytes\n" + message, "Received message");
     }
 }
