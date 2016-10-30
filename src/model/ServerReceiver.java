@@ -79,14 +79,18 @@ public class ServerReceiver extends Thread {
     synchronized private void receiveData(DatagramPacket initialDatagramPacket, Fragment initialFragment) {
         int fragmentType = initialFragment.getHeader().getType();
         int chunkSize = initialFragment.getHeader().getLength();
+        int lastChunkSize = 0;
+        int chunksCounter;
         int chunksCount = initialFragment.getHeader().getSerialNumber();
         StringBuilder data = new StringBuilder();
 
         try {
-            for (int i = 1; i <= chunksCount; ++i) {
+            for (int i = 0; i <= chunksCount; ++i) {
                 DatagramPacket datagramPacket = new DatagramPacket(new byte[chunkSize], chunkSize);
                 socket.receive(datagramPacket);
                 Fragment fragment = new Fragment(datagramPacket.getData());
+
+                lastChunkSize = fragment.getHeader().getLength();
 
                 // Handle last incoming fragment, fixed buffer size with empty bytes computes different checksum
                 if (fragment.getHeader().getLength() != chunkSize) {
@@ -110,19 +114,22 @@ public class ServerReceiver extends Thread {
             // TODO add logging
         }
 
+        lastChunkSize = (lastChunkSize == Header.SIZE) ? chunkSize : lastChunkSize;
+        chunksCounter = (lastChunkSize == chunkSize && initialFragment.getHeader().getSerialNumber() == 1) ? 1 : initialFragment.getHeader().getSerialNumber() + 1;
+
         if (fragmentType == Fragment.DATA_FIRST_MESSAGE)
-            receiveMessage(String.valueOf(data).getBytes(), chunkSize);
+            receiveMessage(String.valueOf(data).getBytes(), chunkSize, lastChunkSize, chunksCounter);
         else
-            receiveFile(String.valueOf(data).getBytes(), chunkSize);
+            receiveFile(String.valueOf(data).getBytes(), chunkSize, lastChunkSize, chunksCounter);
             // TODO add receiving file name
     }
 
-    synchronized private void receiveMessage(byte[] data, int fragmentSize) {
-        new MessageReceiver(new String(data), fragmentSize);
+    synchronized private void receiveMessage(byte[] data, int fragmentSize, int lastFragmentSize, int chunkCounter) {
+        new MessageReceiver(new String(data), fragmentSize, lastFragmentSize, chunkCounter);
     }
 
-    synchronized private void receiveFile(byte[] data, int fragmentSize) {
-        new FileReceiver("test.txt", fragmentSize);
+    synchronized private void receiveFile(byte[] data, int fragmentSize, int lastFragmentSize, int chunkCounter) {
+        new FileReceiver("test.txt", fragmentSize, lastFragmentSize, chunkCounter);
     }
 
     synchronized private void sendDataOKFragment(DatagramPacket datagramPacket, Fragment fragment) throws IOException {

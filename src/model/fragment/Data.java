@@ -25,7 +25,7 @@ public class Data {
 
     public Data(byte[] data, int dataChunkSize, int dataType, boolean isDataCorrupted) {
         this.data = data;
-        this.dataChunkSize = dataChunkSize;
+        this.dataChunkSize = Math.min(dataChunkSize, getDataLength());
         this.dataType = dataType;
         this.isDataCorrupted = isDataCorrupted;
         computeMetadata();

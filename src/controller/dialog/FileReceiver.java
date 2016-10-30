@@ -9,7 +9,10 @@ import sample.InformationWindow;
  */
 public class FileReceiver {
 
-    public FileReceiver(String filename, int fragmentSize) {
-        InformationWindow.infoBox("Fragment size is " + fragmentSize + " bytes\n" + "File name is " + filename, "Received file");
+    public FileReceiver(String filename, int fragmentSize, int lastFragmentSize, int chunkCounter) {
+        InformationWindow.infoBox("Fragment size is " + fragmentSize + " bytes\n"
+                + "Last fragment size is " + lastFragmentSize + " bytes\n"
+                + "Totally received " + chunkCounter + " fragments\n"
+                + "File name is " + filename, "Received file");
     }
 }

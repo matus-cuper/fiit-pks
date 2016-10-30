@@ -9,7 +9,11 @@ import sample.InformationWindow;
  */
 public class MessageReceiver {
 
-    public MessageReceiver(String message, int fragmentSize) {
-        InformationWindow.infoBox("Fragment size is " + fragmentSize + " bytes\n" + message, "Received message");
+    public MessageReceiver(String message, int fragmentSize, int lastFragmentSize, int chunkCounter) {
+        InformationWindow.infoBox("Fragment size is " + fragmentSize + " bytes\n"
+                + "Last fragment size is " + lastFragmentSize + " bytes\n"
+                + "Totally received " + chunkCounter + " fragments\n"
+                + "Message:\n"
+                + message, "Received message");
     }
 }

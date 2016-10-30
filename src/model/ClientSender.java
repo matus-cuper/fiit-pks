@@ -41,7 +41,6 @@ public class ClientSender extends Thread {
     }
 
     public void run() {
-        // TODO unify
         startConnection();
 
         try {
@@ -71,6 +70,7 @@ public class ClientSender extends Thread {
             // TODO add logging
             e.printStackTrace();
         }
+
         stopConnection();
     }
 
@@ -122,21 +122,21 @@ public class ClientSender extends Thread {
     }
 
     private synchronized void send() {
-        int dataAndHeadSize = data.getDataLength() + Header.SIZE;
+        int size = Math.min(data.getDataChunkSize() + Header.HEADER_SIZE - 1, data.getDataLength() + Header.HEADER_SIZE);
 
         // Send first fragment corrupted if it is needed by user
         if (data.isDataCorrupted())
-            sendCorruptedFragment(data.getDataChunkSize() + Header.HEADER_SIZE - 1, data.getDataChunksCount(), Fragment.DATA_FIRST_FILE);
+            sendCorruptedFragment(data.getDataChunkSize() + Header.SIZE - 1, data.getDataChunksCount(), Fragment.DATA_FIRST_FILE);
         data.setCorruptedData(false);
 
         // Send first fragment with metadata about incoming data stream
         if (data.getDataType() == MESSAGE)
-            sendMetadataFragment(data.getDataChunkSize() + Header.HEADER_SIZE - 1, data.getDataChunksCount(), Fragment.DATA_FIRST_MESSAGE);
+            sendMetadataFragment(size, data.getDataChunksCount() - 1, Fragment.DATA_FIRST_MESSAGE);
         else
-            sendMetadataFragment(data.getDataChunkSize() + Header.SIZE - 1, data.getDataChunksCount(), Fragment.DATA_FIRST_FILE);
+            sendMetadataFragment(size, data.getDataChunksCount() - 1, Fragment.DATA_FIRST_FILE);
 
         // Send all data in one fragment or several in loop
-        if (dataAndHeadSize > data.getDataChunkSize())
+        if ((data.getDataLength() + Header.HEADER_SIZE) > data.getDataChunkSize())
             sendData();
         else
             sendOneFragment(1, Fragment.DATA_SENT, data.getBytes());
