@@ -127,12 +127,11 @@ public class ServerReceiver extends Thread {
         }
 
         Fragment fragment = new Fragment(datagramPacket.getData());
-        fileName = new String(fragment.getData());
-        FileWriter.setFileName(fileName);
-        System.out.println("file name in server receiver " + FileWriter.getFileName());
+        fileName = new String(Arrays.copyOfRange(datagramPacket.getData(), Header.SIZE, fragment.getHeader().getLength()));
+        FileWriter fileWriter = new FileWriter(fileName);
 
         try {
-            new FileWriter(data);
+            fileWriter.createFile(data);
         } catch (IOException e) {
             e.printStackTrace();
         }
