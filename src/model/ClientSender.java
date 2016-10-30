@@ -1,9 +1,6 @@
 package model;
 
-import model.fragment.Data;
-import model.fragment.Fragment;
-import model.fragment.Header;
-import model.fragment.MyChecksum;
+import model.fragment.*;
 
 import java.io.IOException;
 import java.net.*;
@@ -65,7 +62,8 @@ public class ClientSender extends Thread {
             }
         } catch (InterruptedException e) {
             // TODO add logging
-            e.printStackTrace();
+            if (socket != null)
+                e.printStackTrace();
         }
 
         stopConnection();
@@ -103,11 +101,13 @@ public class ClientSender extends Thread {
         }
     }
 
-    public void send(byte[] data, String fragmentSize, int dataType, boolean isDataCorrupted) {
+    public void send(byte[] data, String fragmentSize, int dataType, boolean isDataCorrupted) throws ChunkCountExceeded {
         if (Validator.isValidSize(fragmentSize)) {
             this.data = new Data(data, Integer.parseInt(fragmentSize) - Header.SIZE, dataType, isDataCorrupted);
-            if (!this.data.isValid())
+            if (!this.data.isValid()) {
                 this.data = null;
+                throw new ChunkCountExceeded();
+            }
         }
         if (data == null) {
             System.out.println("Error occurred invalid parameters");

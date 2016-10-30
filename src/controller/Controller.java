@@ -6,10 +6,15 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import model.ClientSender;
+import model.FileReader;
 import model.ServerReceiver;
 import model.Validator;
+import model.fragment.ChunkCountExceeded;
+import sample.ErrorWindow;
+import sample.InformationWindow;
 
 import javax.swing.*;
+import java.io.IOException;
 
 public class Controller {
 
@@ -49,13 +54,11 @@ public class Controller {
             if (server == null)
                 server = new ServerReceiver(ServerHostField.getText(), ServerPortField.getText());
             server.start();
+
             switchDisablingServerButtons();
-            // TODO add some kind of window for displaying successfully listening or logging
-        } else {
-            System.out.println("Wrong input format");
-            // TODO add logging
-            // TODO add some kind of warning message, what causing problem
-        }
+            InformationWindow.infoBox("Server start listening on port " + ServerPortField.getText(), "Listening started");
+        } else
+            ErrorWindow.errorBox("Wrong port number " + ServerPortField.getText() + " for server", "Bad port number");
     }
 
     @FXML
@@ -78,13 +81,11 @@ public class Controller {
             if (client == null)
                 client = new ClientSender(ClientHostField.getText(), ClientPortField.getText());
             client.start();
+
             switchDisablingClientButtons();
-            // TODO add some kind of window for displaying successfully sending or logging
-        } else {
-            System.out.println("Wrong input format");
-            // TODO add logging
-            // TODO add some kind of warning message, what causing problem
-        }
+            InformationWindow.infoBox("Client start sending fragment to server " + ClientHostField.getText() + ":" + ClientPortField.getText(), "Sending started");
+        } else
+            ErrorWindow.errorBox("Wrong port number " + ClientPortField.getText() + " for server or IP address " + ClientHostField.getText(), "Bad port number or server IP");
     }
 
     @FXML
@@ -104,18 +105,25 @@ public class Controller {
     @FXML
     public void handleClientSendButton() {
         if (Validator.isValidSize(ClientSizeField.getText())) {
-            if (ClientFileField.getText().isEmpty()) {
-                client.send(ClientMessageField.getText().getBytes(), ClientSizeField.getText(), ClientSender.MESSAGE, ClientChecksumBox.isSelected());
-                System.out.println("Message sent");
+            try {
+                if (ClientFileField.getText().isEmpty()) {
+                    client.send(ClientMessageField.getText().getBytes(), ClientSizeField.getText(), ClientSender.MESSAGE, ClientChecksumBox.isSelected());
+                    InformationWindow.infoBox("Message was sent to server " + ClientHostField.getText() + ":" + ClientPortField.getText(), "Message was sent");
+                }
+                else {
+                    try {
+                        FileReader fileReader = new model.FileReader(ClientFileField.getText());
+                        client.send(fileReader.getBytes(), ClientSizeField.getText(), ClientSender.FILE, ClientChecksumBox.isSelected());
+                        InformationWindow.infoBox("File was sent to server " + ClientHostField.getText() + ":" + ClientPortField.getText(), "File was sent");
+                    } catch (IOException e) {
+                        ErrorWindow.errorBox("File " + ClientFileField.getText() + " was not found", "File not found");
+                    }
+                }
+            } catch (ChunkCountExceeded e) {
+                ErrorWindow.errorBox("Data is too large to send it in fragment with size " + ClientSizeField.getText(), "Small fragment size selected");
             }
-            else {
-                client.send((new model.FileReader(ClientFileField.getText())).getBytes(), ClientSizeField.getText(), ClientSender.FILE, ClientChecksumBox.isSelected());
-                System.out.println("File sent");
-            }
-        } else {
-            System.out.println("Wrong fragment size");
-            // TODO add some kind of warning message, what causing problem
-        }
+        } else
+            ErrorWindow.errorBox("Wrong fragment size " + ClientSizeField.getText() + "\nMust be between 10 and 65498", "Wrong fragment size");
     }
 
     @FXML
