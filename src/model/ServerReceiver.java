@@ -47,11 +47,17 @@ public class ServerReceiver extends Thread {
                 DatagramPacket datagramPacket = new DatagramPacket(new byte[Header.SIZE], Header.SIZE);
                 socket.receive(datagramPacket);
                 Fragment fragment = new Fragment(datagramPacket.getData());
-                fragment.isValid(datagramPacket.getData());
-                sendDataOKFragment(datagramPacket, fragment);
 
-                if(dataIncoming(fragment.getHeader().getType()))
-                    receiveData(datagramPacket, fragment);
+                try {
+                    fragment.isValid(datagramPacket.getData());
+                    sendDataOKFragment(datagramPacket, fragment);
+
+                    if(dataIncoming(fragment.getHeader().getType()))
+                        receiveData(datagramPacket, fragment);
+                } catch (CorruptedDataException e) {
+                    sendDataResentFragment(datagramPacket, fragment);
+                    e.printStackTrace();
+                }
 
 //                System.out.println( datagramPacket.getAddress() + " " + datagramPacket.getPort()
 //                        + " length " + fragment.getHeader().getLength()
@@ -59,9 +65,6 @@ public class ServerReceiver extends Thread {
 //                        + " type " + fragment.getHeader().getType()
 //                        + " data : " + fragment.getDataPrintable());
             }
-        } catch (CorruptedDataException e) {
-            e.printStackTrace();
-            // TODO implement
         } catch (SocketException e) {
             //TODO add logging
             if (listen)
@@ -96,19 +99,23 @@ public class ServerReceiver extends Thread {
                 if (fragment.getHeader().getLength() != chunkSize) {
                     fragment = new Fragment(Arrays.copyOfRange(datagramPacket.getData(), 0, fragment.getHeader().getLength()));
                 }
-                fragment.isValid(datagramPacket.getData());
+
+                try {
+                    fragment.isValid(datagramPacket.getData());
+                    sendDataOKFragment(datagramPacket, fragment);
+                    data.append(new StringBuilder(new String( (fragment.getData() != null) ? fragment.getData() : new byte[1] )));
+                } catch (CorruptedDataException e) {
+                    sendDataResentFragment(datagramPacket, fragment);
+                    --i;
+                }
 
                 // Ugly hack
-                data.append(new StringBuilder(new String( (fragment.getData() != null) ? fragment.getData() : new byte[1] )));
 //                System.out.println( datagramPacket.getAddress() + " " + datagramPacket.getPort()
 //                        + " length " + fragment.getHeader().getLength()
 //                        + " number " + fragment.getHeader().getSerialNumber()
 //                        + " type " + fragment.getHeader().getType()
 //                        + " data : " + fragment.getDataPrintable());
             }
-        } catch (CorruptedDataException e) {
-            e.printStackTrace();
-            // TODO implement
         } catch (IOException e) {
             e.printStackTrace();
             // TODO add logging
@@ -134,6 +141,15 @@ public class ServerReceiver extends Thread {
 
     synchronized private void sendDataOKFragment(DatagramPacket datagramPacket, Fragment fragment) throws IOException {
         Header header = new Header(fragment.getHeader().getLength(), fragment.getHeader().getSerialNumber(), Fragment.DATA_OK);
+        Fragment newFragment = new Fragment(new MyChecksum(header.getBytes()), header.getBytes());
+        DatagramPacket newDatagramPacket = new DatagramPacket(newFragment.getBytes(), Header.SIZE, datagramPacket.getAddress(), datagramPacket.getPort());
+
+        if (socket != null)
+            socket.send(newDatagramPacket);
+    }
+
+    synchronized private void sendDataResentFragment(DatagramPacket datagramPacket, Fragment fragment) throws IOException {
+        Header header = new Header(fragment.getHeader().getLength(), fragment.getHeader().getSerialNumber(), Fragment.DATA_RESENT);
         Fragment newFragment = new Fragment(new MyChecksum(header.getBytes()), header.getBytes());
         DatagramPacket newDatagramPacket = new DatagramPacket(newFragment.getBytes(), Header.SIZE, datagramPacket.getAddress(), datagramPacket.getPort());
 

@@ -66,9 +66,6 @@ public class ClientSender extends Thread {
         } catch (InterruptedException e) {
             // TODO add logging
             e.printStackTrace();
-        } catch (IOException e) {
-            // TODO add logging
-            e.printStackTrace();
         }
 
         stopConnection();
@@ -82,9 +79,6 @@ public class ClientSender extends Thread {
                 sendEmptyFragment(Fragment.START_CONNECTION);
             } while (!receivedDataOKFragment());
         } catch (SocketException e) {
-            // TODO add logging
-            e.printStackTrace();
-        } catch (IOException e) {
             // TODO add logging
             e.printStackTrace();
         }
@@ -223,10 +217,16 @@ public class ClientSender extends Thread {
         sendDatagramPacket(datagramPacket);
     }
 
-    private synchronized boolean receivedDataOKFragment() throws IOException {
+    private synchronized boolean receivedDataOKFragment() {
         if (socket != null) {
             DatagramPacket datagramPacket = new DatagramPacket(new byte[Header.SIZE], Header.SIZE);
-            socket.receive(datagramPacket);
+
+            try {
+                socket.receive(datagramPacket);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
             Fragment fragment = new Fragment(datagramPacket.getData());
 
             return fragment.getHeader().getType() == Fragment.DATA_OK;
