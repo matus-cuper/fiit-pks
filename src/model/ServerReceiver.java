@@ -2,7 +2,10 @@ package model;
 
 import controller.dialog.FileReceiver;
 import controller.dialog.MessageReceiver;
-import model.fragment.*;
+import model.fragment.CorruptedDataException;
+import model.fragment.Fragment;
+import model.fragment.Header;
+import model.fragment.MyChecksum;
 
 import java.io.IOException;
 import java.net.*;
@@ -23,9 +26,7 @@ public class ServerReceiver extends Thread {
     public ServerReceiver(String address, String port) {
         listen = true;
         try {
-            System.out.println(address);
             this.address = InetAddress.getByName(address);
-            System.out.println(this.address.toString());
             this.port = Integer.parseInt(port);
         } catch (UnknownHostException e) {
             //TODO add logging

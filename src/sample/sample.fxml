@@ -37,17 +37,7 @@
                               <Font size="16.0" />
                            </font>
                         </TextField>
-                        <Label fx:id="ServerSizeLabel" layoutX="39.0" layoutY="105.0" text="Fragment size">
-                           <font>
-                              <Font size="16.0" />
-                           </font>
-                        </Label>
-                        <TextField fx:id="ServerSizeField" disable="true" editable="false" layoutX="188.0" layoutY="99.0" prefHeight="32.0" prefWidth="130.0" text="10">
-                           <font>
-                              <Font size="16.0" />
-                           </font>
-                        </TextField>
-                         <Button fx:id="ServerInterruptButton" layoutX="142.0" layoutY="135.0" mnemonicParsing="false" onAction="#handleServerInterruptButton" prefHeight="32.0" prefWidth="96.0" text="Interrupt">
+                         <Button fx:id="ServerInterruptButton" disable="true" layoutX="142.0" layoutY="135.0" mnemonicParsing="false" onAction="#handleServerInterruptButton" prefHeight="32.0" prefWidth="96.0" text="Interrupt">
                              <font>
                                  <Font size="16.0" />
                              </font>
@@ -95,7 +85,7 @@
                                   <Font size="16.0" />
                               </font>
                           </TextField>
-                          <Button fx:id="ClientSendButton" layoutX="536.0" layoutY="135.0" mnemonicParsing="false" onAction="#handleClientSendButton" text="Send">
+                          <Button fx:id="ClientSendButton" disable="true" layoutX="536.0" layoutY="135.0" mnemonicParsing="false" onAction="#handleClientSendButton" text="Send">
                               <font>
                                   <Font size="16.0" />
                               </font>
@@ -105,7 +95,7 @@
                               <Font size="16.0" />
                            </font>
                         </Button>
-                        <Button fx:id="ClientDisconnectButton" layoutX="207.0" layoutY="135.0" mnemonicParsing="false" onAction="#handleClientDisconnectButton" text="Disconnect">
+                        <Button fx:id="ClientDisconnectButton" disable="true" layoutX="207.0" layoutY="135.0" mnemonicParsing="false" onAction="#handleClientDisconnectButton" text="Disconnect">
                            <font>
                               <Font size="16.0" />
                            </font>

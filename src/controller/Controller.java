@@ -1,7 +1,7 @@
 package controller;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
@@ -10,7 +10,6 @@ import model.ServerReceiver;
 import model.Validator;
 
 import javax.swing.*;
-import java.io.File;
 
 public class Controller {
 
@@ -22,53 +21,84 @@ public class Controller {
     @FXML
     private TextField ServerPortField;
     @FXML
+    private Button ServerListenButton;
+    @FXML
+    private Button ServerInterruptButton;
+    @FXML
     private TextField ClientHostField;
     @FXML
     private TextField ClientPortField;
     @FXML
     private TextField ClientSizeField;
     @FXML
+    private Button ClientConnectButton;
+    @FXML
+    private Button ClientDisconnectButton;
+    @FXML
+    private Button ClientSendButton;
+    @FXML
     private TextArea ClientMessageField;
     @FXML
     private TextField ClientFileField;
     @FXML
     private CheckBox ClientChecksumBox;
-    // TODO Reoder methods
+
     @FXML
-    public void handleServerListenButton(ActionEvent event) {
+    public void handleServerListenButton() {
         if (Validator.isValidHost(ServerHostField.getText(), ServerPortField.getText())) {
-            server = new ServerReceiver(ServerHostField.getText(), ServerPortField.getText());
-            // TODO check if server exists
+            if (server == null)
+                server = new ServerReceiver(ServerHostField.getText(), ServerPortField.getText());
             server.start();
+            switchDisablingServerButtons();
+            // TODO add some kind of window for displaying successfully listening or logging
         } else {
             System.out.println("Wrong input format");
+            // TODO add logging
             // TODO add some kind of warning message, what causing problem
         }
     }
 
     @FXML
-    public void handleServerInterruptButton(ActionEvent event) {
+    public void handleServerInterruptButton() {
         server.interruptListening();
         server.interrupt();
         try {
             server.join();
         } catch (InterruptedException e) {
+            // TODO add logging
             e.printStackTrace();
         }
+        server = null;
+        switchDisablingServerButtons();
     }
 
     @FXML
     public void handleClientConnectButton() {
         if (Validator.isValidHost(ClientHostField.getText(), ClientPortField.getText())) {
-            client = new ClientSender(ClientHostField.getText(), ClientPortField.getText());
-            // TODO check if client exists
-            // TODO need to kill thread, because it runs forever
+            if (client == null)
+                client = new ClientSender(ClientHostField.getText(), ClientPortField.getText());
             client.start();
-            System.out.println("Connection started");
+            switchDisablingClientButtons();
+            // TODO add some kind of window for displaying successfully sending or logging
         } else {
             System.out.println("Wrong input format");
+            // TODO add logging
             // TODO add some kind of warning message, what causing problem
         }
+    }
+
+    @FXML
+    public void handleClientDisconnectButton() {
+        client.stopConnection();
+        client.interrupt();
+        try {
+            client.join();
+        } catch (InterruptedException e) {
+            // TODO add logging
+            e.printStackTrace();
+        }
+        client = null;
+        switchDisablingClientButtons();
     }
 
     @FXML
@@ -89,32 +119,43 @@ public class Controller {
     }
 
     @FXML
-    public void handleClientDisconnectButton() {
-        client.stopConnection();
-        try {
-            client.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        System.out.println("Connection stopped");
+    private void handleClientFileField() {
+        ClientFileField.setText("");
     }
 
     @FXML
     public void handleClientFileButton() {
         JFileChooser fileChooser = new JFileChooser();
-        int returnValue = fileChooser.showOpenDialog(null);
-        if (returnValue == JFileChooser.APPROVE_OPTION) {
-            File selectedFile = fileChooser.getSelectedFile();
-            updateClientFileField(selectedFile.getAbsolutePath());
-        }
+
+        if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION)
+            updateClientFileField(fileChooser.getSelectedFile().getAbsolutePath());
     }
 
     private void updateClientFileField(String filePath) {
         ClientFileField.setText(filePath);
     }
 
-    @FXML
-    private void handleClientFileField() {
-        ClientFileField.setText("");
+    private void switchDisablingServerButtons() {
+        if (ServerListenButton.isDisabled()) {
+            ServerListenButton.setDisable(false);
+            ServerInterruptButton.setDisable(true);
+        }
+        else {
+            ServerListenButton.setDisable(true);
+            ServerInterruptButton.setDisable(false);
+        }
+    }
+
+    private void switchDisablingClientButtons() {
+        if (ClientConnectButton.isDisabled()) {
+            ClientConnectButton.setDisable(false);
+            ClientDisconnectButton.setDisable(true);
+            ClientSendButton.setDisable(true);
+        }
+        else {
+            ClientConnectButton.setDisable(true);
+            ClientDisconnectButton.setDisable(false);
+            ClientSendButton.setDisable(false);
+        }
     }
 }
