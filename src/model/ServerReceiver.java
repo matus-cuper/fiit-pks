@@ -18,13 +18,7 @@ public class ServerReceiver extends Thread {
     private DatagramSocket socket;
     private InetAddress address;
     private int port;
-    private Data data;
     private boolean listen;
-
-    public ServerReceiver(InetAddress address, int port) {
-        this.address = address;
-        this.port = port;
-    }
 
     public ServerReceiver(String address, String port) {
         listen = true;
@@ -43,7 +37,6 @@ public class ServerReceiver extends Thread {
         try {
             socket = new DatagramSocket(port);
             while (listen) {
-                // TODO read size of data from first fragment
                 DatagramPacket datagramPacket = new DatagramPacket(new byte[Header.SIZE], Header.SIZE);
                 socket.receive(datagramPacket);
                 Fragment fragment = new Fragment(datagramPacket.getData());
@@ -58,17 +51,11 @@ public class ServerReceiver extends Thread {
                     sendDataResentFragment(datagramPacket, fragment);
                     e.printStackTrace();
                 }
-
-//                System.out.println( datagramPacket.getAddress() + " " + datagramPacket.getPort()
-//                        + " length " + fragment.getHeader().getLength()
-//                        + " number " + fragment.getHeader().getSerialNumber()
-//                        + " type " + fragment.getHeader().getType()
-//                        + " data : " + fragment.getDataPrintable());
             }
         } catch (SocketException e) {
             //TODO add logging
             if (listen)
-            e.printStackTrace();
+                e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
             //TODO add logging
@@ -108,13 +95,6 @@ public class ServerReceiver extends Thread {
                     sendDataResentFragment(datagramPacket, fragment);
                     --i;
                 }
-
-                // Ugly hack
-//                System.out.println( datagramPacket.getAddress() + " " + datagramPacket.getPort()
-//                        + " length " + fragment.getHeader().getLength()
-//                        + " number " + fragment.getHeader().getSerialNumber()
-//                        + " type " + fragment.getHeader().getType()
-//                        + " data : " + fragment.getDataPrintable());
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -160,21 +140,5 @@ public class ServerReceiver extends Thread {
     public void interruptListening() {
         listen = false;
         socket.close();
-    }
-
-    public InetAddress getAddress() {
-        return address;
-    }
-
-    public void setAddress(InetAddress address) {
-        this.address = address;
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
     }
 }

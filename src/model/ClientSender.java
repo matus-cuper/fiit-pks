@@ -236,10 +236,6 @@ public class ClientSender extends Thread {
         return false;
     }
 
-    private synchronized void receiveDataResentFragment() {
-
-    }
-
     private synchronized void sendDatagramPacket(DatagramPacket datagramPacket) {
         try {
             socket.send(datagramPacket);
