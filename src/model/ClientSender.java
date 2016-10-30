@@ -135,6 +135,9 @@ public class ClientSender extends Thread {
         else
             sendOneFragment(1, Fragment.DATA_SENT, data.getBytes());
 
+        if (data.getDataType() == FILE)
+            sendOneFragment(0, Fragment.DATA_OK, FileReader.getFileName());
+
         // Send last fragment after all data was sent
         sendEmptyFragment(Fragment.DATA_LAST);
     }

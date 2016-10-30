@@ -46,7 +46,7 @@ public class ServerReceiver extends Thread {
                     fragment.isValid(datagramPacket.getData());
                     sendDataOKFragment(datagramPacket, fragment);
 
-                    if(dataIncoming(fragment.getHeader().getType()))
+                    if (dataIncoming(fragment.getHeader().getType()))
                         receiveData(datagramPacket, fragment);
                 } catch (CorruptedDataException e) {
                     sendDataResentFragment(datagramPacket, fragment);
@@ -109,7 +109,6 @@ public class ServerReceiver extends Thread {
             receiveMessage(String.valueOf(data).getBytes(), chunkSize, lastChunkSize, chunksCounter);
         else
             receiveFile(String.valueOf(data).getBytes(), chunkSize, lastChunkSize, chunksCounter);
-            // TODO add receiving file name
     }
 
     synchronized private void receiveMessage(byte[] data, int fragmentSize, int lastFragmentSize, int chunkCounter) {
@@ -117,7 +116,27 @@ public class ServerReceiver extends Thread {
     }
 
     synchronized private void receiveFile(byte[] data, int fragmentSize, int lastFragmentSize, int chunkCounter) {
-        new FileReceiver("test.txt", fragmentSize, lastFragmentSize, chunkCounter);
+        DatagramPacket datagramPacket = new DatagramPacket(new byte[100], 100);
+        String fileName;
+
+        try {
+            socket.receive(datagramPacket);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Fragment fragment = new Fragment(datagramPacket.getData());
+        fileName = new String(fragment.getData());
+        FileWriter.setFileName(fileName);
+        System.out.println("file name in server receiver " + FileWriter.getFileName());
+
+        try {
+            new FileWriter(data);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        new FileReceiver(fileName, fragmentSize, lastFragmentSize, chunkCounter);
     }
 
     synchronized private void sendDataOKFragment(DatagramPacket datagramPacket, Fragment fragment) throws IOException {
