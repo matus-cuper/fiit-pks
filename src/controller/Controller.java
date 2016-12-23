@@ -22,6 +22,8 @@ public class Controller {
     private ServerReceiver server = null;
 
     @FXML
+    private TextField sentFragmentsLabel;
+    @FXML
     private TextField ServerHostField;
     @FXML
     private TextField ServerPortField;
@@ -100,6 +102,7 @@ public class Controller {
         }
         client = null;
         switchDisablingClientButtons();
+        sentFragmentsLabel.setText(String.valueOf(ClientSender.sentFragments));
     }
 
     @FXML

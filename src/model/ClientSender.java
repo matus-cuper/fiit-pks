@@ -1,6 +1,7 @@
 package model;
 
 import model.fragment.*;
+import sample.InformationWindow;
 
 import java.io.IOException;
 import java.net.*;
@@ -21,6 +22,8 @@ public class ClientSender extends Thread {
     private int port;
     private Data data;
     private static Semaphore semaphore = new Semaphore(1);
+
+    public static int sentFragments = 0;
 
     public ClientSender(String address, String port) {
         data = null;
@@ -66,7 +69,7 @@ public class ClientSender extends Thread {
                 e.printStackTrace();
         }
 
-        stopConnection();
+   //     stopConnection();
     }
 
     private void startConnection() {
@@ -99,6 +102,9 @@ public class ClientSender extends Thread {
             socket.close();
             socket = null;
         }
+
+
+        InformationWindow.infoBox("Pocas celeho spojenia bolo odoslanych " + sentFragments + " fragmentov", "Fragments send");
     }
 
     public void send(byte[] data, String fragmentSize, int dataType, boolean isDataCorrupted) throws ChunkCountExceeded {
@@ -132,8 +138,10 @@ public class ClientSender extends Thread {
         // Send all data in one fragment or several in loop
         if ((data.getDataLength() + Header.HEADER_SIZE) > data.getDataChunkSize())
             sendData();
-        else
+        else {
             sendOneFragment(1, Fragment.DATA_SENT, data.getBytes());
+            sentFragments++;
+        }
 
         if (data.getDataType() == FILE)
             sendOneFragment(0, Fragment.DATA_OK, FileReader.getFileName());
@@ -146,11 +154,14 @@ public class ClientSender extends Thread {
         // Send all data with same fragment size
         for (int i = 0; i < data.getDataChunksCount() - 1; ++i) {
             sendOneFragment(i + 1, Fragment.DATA_SENT, data.getChunk(i));
+            sentFragments++;
         }
 
         // Send last data fragment only if last fragment contains data
-        if (data.getDataLastChunkSize() > 0)
+        if (data.getDataLastChunkSize() > 0) {
             sendOneFragment(data.getDataChunksCount(), Fragment.DATA_SENT, data.getChunk(data.getDataChunksCount() - 1));
+            sentFragments++;
+        }
     }
 
     /**
